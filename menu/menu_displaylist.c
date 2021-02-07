@@ -5530,6 +5530,12 @@ unsigned menu_displaylist_build_list(
                   MENU_ENUM_LABEL_HELP_CONTROLS,
                   0, 0, 0))
             count++;
+         if (menu_entries_append_enum(list,
+                  msg_hash_to_str(MENU_ENUM_LABEL_VALUE_HELP_RRVL),
+                  msg_hash_to_str(MENU_ENUM_LABEL_HELP_RRVL),
+                  MENU_ENUM_LABEL_HELP_RRVL,
+                  0, 0, 0))
+            count++;
          break;
       case DISPLAYLIST_AUDIO_RESAMPLER_SETTINGS_LIST:
          if (MENU_DISPLAYLIST_PARSE_SETTINGS_ENUM(list,

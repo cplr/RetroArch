@@ -1275,6 +1275,10 @@ MSG_HASH(
    "help_controls"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_HELP_RRVL,
+   "help_rrvl"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_HELP_LIST,
    "help_list"
    )

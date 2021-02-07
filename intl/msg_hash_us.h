@@ -948,6 +948,10 @@ MSG_HASH(
    MENU_ENUM_LABEL_VALUE_HELP_CONTROLS,
    "Basic Menu Controls"
    )
+MSG_HASH(
+   MENU_ENUM_LABEL_VALUE_HELP_RRVL,
+   "RRVL Help"
+   )
 
 /* Main Menu > Help > Basic Menu Controls */
 

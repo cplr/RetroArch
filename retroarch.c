@@ -557,6 +557,18 @@ static int menu_dialog_iterate(
             }
          }
          break;
+      case MENU_DIALOG_HELP_RRVL:
+         {
+            FILE* f = popen("/usr/bin/rrvl_help", "r");
+            size_t l = 0;
+            char line[4096];
+            while (fgets(line, sizeof(line), f))
+            {
+               l += snprintf(s, len - l, line);
+            }
+            pclose(f);
+         }
+         break;
       case MENU_DIALOG_HELP_CONTROLS:
          {
             unsigned i;
@@ -1649,6 +1661,7 @@ static enum action_iterate_type action_iterate_type(const char *label)
       if (
             string_is_equal(label, "help") ||
             string_is_equal(label, "help_controls") ||
+            string_is_equal(label, "help_rrvl") ||
             string_is_equal(label, "help_what_is_a_core") ||
             string_is_equal(label, "help_loading_content") ||
             string_is_equal(label, "help_scanning_content") ||
@@ -23544,6 +23557,7 @@ static void menu_input_pointer_close_messagebox(struct rarch_state *p_rarch)
       if (
                string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP))
             || string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP_CONTROLS))
+            || string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP_RRVL))
             || string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP_WHAT_IS_A_CORE))
             || string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP_LOADING_CONTENT))
             || string_is_equal(label, msg_hash_to_str(MENU_ENUM_LABEL_HELP_SCANNING_CONTENT))

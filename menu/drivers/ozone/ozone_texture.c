@@ -178,6 +178,7 @@ uintptr_t ozone_entries_icon_get_texture(ozone_handle_t *ozone,
             return ozone->icons_textures[OZONE_ENTRIES_ICONS_TEXTURE_CURSOR];
       case MENU_ENUM_LABEL_HELP_LIST:
       case MENU_ENUM_LABEL_HELP_CONTROLS:
+      case MENU_ENUM_LABEL_HELP_RRVL:
       case MENU_ENUM_LABEL_HELP_LOADING_CONTENT:
       case MENU_ENUM_LABEL_HELP_SCANNING_CONTENT:
       case MENU_ENUM_LABEL_HELP_WHAT_IS_A_CORE:

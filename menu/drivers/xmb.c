@@ -2628,6 +2628,7 @@ static uintptr_t xmb_icon_get_id(xmb_handle_t *xmb,
          return xmb->textures.list[XMB_TEXTURE_CURSOR];
       case MENU_ENUM_LABEL_HELP_LIST:
       case MENU_ENUM_LABEL_HELP_CONTROLS:
+      case MENU_ENUM_LABEL_HELP_RRVL:
       case MENU_ENUM_LABEL_HELP_LOADING_CONTENT:
       case MENU_ENUM_LABEL_HELP_SCANNING_CONTENT:
       case MENU_ENUM_LABEL_HELP_WHAT_IS_A_CORE:
