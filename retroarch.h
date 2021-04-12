@@ -139,6 +139,7 @@ enum rarch_ctl_state
    RARCH_CTL_UNSET_MISSING_BIOS,
 
    RARCH_CTL_IS_GAME_OPTIONS_ACTIVE,
+   RARCH_CTL_IS_FOLDER_OPTIONS_ACTIVE,
 
    RARCH_CTL_IS_PAUSED,
    RARCH_CTL_SET_PAUSED,
@@ -331,9 +332,6 @@ bool retroarch_is_forced_fullscreen(void);
 
 void retroarch_set_current_core_type(
       enum rarch_core_type type, bool explicitly_set);
-
-bool retroarch_apply_shader(enum rarch_shader_type type, const char *preset_path,
-      bool message);
 
 const char* retroarch_get_shader_preset(void);
 
@@ -770,7 +768,7 @@ void recording_driver_update_streaming_url(void);
 #define DEFAULT_SHADER_TYPE RARCH_SHADER_HLSL
 #elif defined(__PSL1GHT__) || defined(HAVE_OPENGLES2) || defined(HAVE_GLSL)
 #define DEFAULT_SHADER_TYPE RARCH_SHADER_GLSL
-#elif defined(__CELLOS_LV2__) || defined(HAVE_CG)
+#elif defined(HAVE_CG)
 #define DEFAULT_SHADER_TYPE RARCH_SHADER_CG
 #else
 #define DEFAULT_SHADER_TYPE RARCH_SHADER_NONE
@@ -1117,6 +1115,7 @@ typedef struct video_info
 typedef struct video_frame_info
 {
    void *userdata;
+   void *widgets_userdata;
 
    int custom_vp_x;
    int custom_vp_y;
@@ -1182,6 +1181,7 @@ typedef struct video_frame_info
    bool widgets_is_rewinding;
    bool input_menu_swap_ok_cancel_buttons;
    bool input_driver_nonblock_state;
+   bool input_driver_grab_mouse_state;
    bool hard_sync;
    bool fps_show;
    bool memory_show;
@@ -1584,7 +1584,9 @@ const char* config_get_video_driver_options(void);
  *
  * Returns: video driver's userdata.
  **/
-void *video_driver_get_ptr(bool force_nonthreaded_data);
+void *video_driver_get_ptr(void);
+
+void *video_driver_get_data(void);
 
 bool video_driver_set_rotation(unsigned rotation);
 
@@ -1676,8 +1678,6 @@ void video_monitor_set_refresh_rate(float hz);
  **/
 bool video_monitor_fps_statistics(double *refresh_rate,
       double *deviation, unsigned *sample_points);
-
-unsigned video_pixel_get_alignment(unsigned pitch);
 
 void crt_switch_driver_reinit(void);
 
@@ -1804,23 +1804,6 @@ const char* video_driver_get_gpu_api_version_string(void);
 void video_driver_set_gpu_api_devices(enum gfx_ctx_api api, struct string_list *list);
 
 struct string_list* video_driver_get_gpu_api_devices(enum gfx_ctx_api api);
-
-static INLINE bool gl_set_core_context(enum retro_hw_context_type ctx_type)
-{
-   gfx_ctx_flags_t flags;
-   if (ctx_type != RETRO_HW_CONTEXT_OPENGL_CORE)
-      return false;
-
-   /**
-    * Ensure that the rest of the frontend knows we have a core context
-    */
-   flags.flags = 0;
-   BIT32_SET(flags.flags, GFX_CTX_FLAGS_GL_CORE_CONTEXT);
-
-   video_context_driver_set_flags(&flags);
-
-   return true;
-}
 
 extern video_driver_t video_gl_core;
 extern video_driver_t video_gl2;
@@ -1981,6 +1964,8 @@ void retroarch_init_task_queue(void);
 
 bool input_key_pressed(int key, bool keyboard_pressed);
 
+bool input_mouse_grabbed(void);
+
 const char *joypad_driver_name(unsigned i);
 void joypad_driver_reinit(void *data, const char *joypad_driver_name);
 
@@ -1988,8 +1973,47 @@ void input_driver_init_joypads(void);
 
 void *input_driver_init_wrap(input_driver_t *input, const char *name);
 
-/* creates folder and core options stub file for subsequent runs */
-bool create_folder_and_core_options(void);
+/* Human readable order of input binds */
+static const unsigned input_config_bind_order[] = {
+   RETRO_DEVICE_ID_JOYPAD_UP,
+   RETRO_DEVICE_ID_JOYPAD_DOWN,
+   RETRO_DEVICE_ID_JOYPAD_LEFT,
+   RETRO_DEVICE_ID_JOYPAD_RIGHT,
+   RETRO_DEVICE_ID_JOYPAD_A,
+   RETRO_DEVICE_ID_JOYPAD_B,
+   RETRO_DEVICE_ID_JOYPAD_X,
+   RETRO_DEVICE_ID_JOYPAD_Y,
+   RETRO_DEVICE_ID_JOYPAD_SELECT,
+   RETRO_DEVICE_ID_JOYPAD_START,
+   RETRO_DEVICE_ID_JOYPAD_L,
+   RETRO_DEVICE_ID_JOYPAD_R,
+   RETRO_DEVICE_ID_JOYPAD_L2,
+   RETRO_DEVICE_ID_JOYPAD_R2,
+   RETRO_DEVICE_ID_JOYPAD_L3,
+   RETRO_DEVICE_ID_JOYPAD_R3,
+   19, /* Left Analog Up */
+   18, /* Left Analog Down */
+   17, /* Left Analog Left */
+   16, /* Left Analog Right */
+   23, /* Right Analog Up */
+   22, /* Right Analog Down */
+   21, /* Right Analog Left */
+   20, /* Right Analog Right */
+};
+
+/* Creates folder and core options stub file for subsequent runs */
+bool core_options_create_override(bool game_specific);
+bool core_options_remove_override(bool game_specific);
+void core_options_reset(void);
+
+typedef enum apple_view_type
+{
+   APPLE_VIEW_TYPE_NONE = 0,
+   APPLE_VIEW_TYPE_OPENGL_ES,
+   APPLE_VIEW_TYPE_OPENGL,
+   APPLE_VIEW_TYPE_VULKAN,
+   APPLE_VIEW_TYPE_METAL
+} apple_view_type_t;
 
 RETRO_END_DECLS
 

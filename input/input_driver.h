@@ -62,6 +62,7 @@ enum input_toggle_type
    INPUT_TOGGLE_HOLD_START,
    INPUT_TOGGLE_HOLD_SELECT,
    INPUT_TOGGLE_DOWN_SELECT,
+   INPUT_TOGGLE_L2_R2,
    INPUT_TOGGLE_LAST
 };
 
@@ -224,7 +225,7 @@ struct rarch_joypad_driver
 #elif defined(PSP)
 #define DEFAULT_MAX_PADS 1
 #elif defined(PS2)
-#define DEFAULT_MAX_PADS 2
+#define DEFAULT_MAX_PADS 8
 #elif defined(GEKKO) || defined(HW_RVL)
 #define DEFAULT_MAX_PADS 4
 #elif defined(HAVE_ODROIDGO2)

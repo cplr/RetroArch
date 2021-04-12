@@ -50,7 +50,7 @@
 #define MAX_GAMMA_SETTING 1
 #endif
 
-#if defined(XENON) || defined(_XBOX360)
+#if defined(XENON) || defined(_XBOX360) || defined(__PSL1GHT__) || defined(__PS3__)
 #define DEFAULT_ASPECT_RATIO 1.7778f
 #elif defined(_XBOX1) || defined(GEKKO) || defined(ANDROID)
 #define DEFAULT_ASPECT_RATIO 1.3333f
@@ -72,7 +72,7 @@
  * we need to extract to a user-writable directory on first boot.
  *
  * Examples include: Android, iOS/OSX) */
-#if defined(ANDROID) || defined(IOS)
+#if defined(ANDROID) || defined(__APPLE__)
 #define DEFAULT_BUNDLE_ASSETS_EXTRACT_ENABLE true
 #else
 #define DEFAULT_BUNDLE_ASSETS_EXTRACT_ENABLE false
@@ -364,7 +364,7 @@
 /* 1:1 PAR */
 #define DEFAULT_ASPECT_RATIO_AUTO false
 
-#if defined(_XBOX360)
+#if defined(_XBOX360) || defined(__PS3__)
 #define DEFAULT_ASPECT_RATIO_IDX ASPECT_RATIO_16_9
 #elif defined(PSP) || defined(_3DS) || defined(HAVE_LIBNX) || defined(VITA)
 #define DEFAULT_ASPECT_RATIO_IDX ASPECT_RATIO_CORE
@@ -387,6 +387,9 @@
 #define DEFAULT_CONFIG_SAVE_ON_EXIT true
 
 #define DEFAULT_SHOW_HIDDEN_FILES false
+
+/* Initialise file browser with the last used start directory */
+#define DEFAULT_USE_LAST_START_DIRECTORY false
 
 #define DEFAULT_OVERLAY_HIDE_IN_MENU true
 
@@ -554,6 +557,8 @@ static const bool menu_show_sublabels                = true;
 static const bool menu_dynamic_wallpaper_enable      = true;
 static const bool menu_scroll_fast                   = false;
 
+#define DEFAULT_MENU_SCROLL_DELAY 256
+
 #define DEFAULT_MENU_TICKER_TYPE (TICKER_TYPE_LOOP)
 static const float menu_ticker_speed        = 2.0f;
 
@@ -681,17 +686,17 @@ static const bool default_systemfiles_in_content_dir = false;
 static const bool default_screenshots_in_content_dir = false;
 
 #if defined(_XBOX1) || defined(__PS3__) || defined(_XBOX360) || defined(DINGUX)
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_L3_R3;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_L3_R3
 #elif defined(PS2) || defined(PSP)
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_HOLD_START;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_HOLD_START
 #elif defined(VITA)
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_L1_R1_START_SELECT;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_L1_R1_START_SELECT
 #elif defined(SWITCH) || defined(ORBIS)
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_START_SELECT;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_START_SELECT
 #elif TARGET_OS_TV
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_DOWN_Y_L_R;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_DOWN_Y_L_R
 #else
-static const unsigned menu_toggle_gamepad_combo    = INPUT_TOGGLE_NONE;
+#define DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO INPUT_TOGGLE_NONE
 #endif
 
 #if defined(VITA)
@@ -829,12 +834,6 @@ static const bool audio_enable_menu_bgm    = false;
 #define DEFAULT_NOTIFICATION_SHOW_AUTOCONFIG true
 #endif
 
-#if defined(HAVE_SCREENSHOTS)
-#define DEFAULT_NOTIFICATION_SHOW_SCREENSHOT_TAKEN true
-#else
-#define DEFAULT_NOTIFICATION_SHOW_SCREENSHOT_TAKEN false
-#endif
-
 /* Display a notification when cheats are being
  * applied */
 #define DEFAULT_NOTIFICATION_SHOW_CHEATS_APPLIED true
@@ -855,6 +854,7 @@ static const bool audio_enable_menu_bgm    = false;
  * content */
 #define DEFAULT_NOTIFICATION_SHOW_FAST_FORWARD true
 
+#if defined(HAVE_SCREENSHOTS)
 /*Display a notification when taking a screenshot*/
 #define DEFAULT_NOTIFICATION_SHOW_SCREENSHOT true
 
@@ -864,6 +864,10 @@ static const bool audio_enable_menu_bgm    = false;
 /* Display a white flashing effect with the desired 
  * duration when taking a screenshot*/
 #define DEFAULT_NOTIFICATION_SHOW_SCREENSHOT_FLASH 0
+#endif
+
+/*Display a notification when setting the refresh rate*/
+#define DEFAULT_NOTIFICATION_SHOW_REFRESH_RATE true
 
 /* Output samplerate. */
 #ifdef GEKKO
@@ -1097,7 +1101,7 @@ static const uint16_t network_remote_base_port = 55400;
  * a new one) */
 #define DEFAULT_CORE_UPDATER_AUTO_BACKUP_HISTORY_SIZE 1
 
-#if defined(ANDROID) || defined(IOS)
+#if defined(ANDROID) || defined(__APPLE__)
 #define DEFAULT_NETWORK_ON_DEMAND_THUMBNAILS true
 #else
 #define DEFAULT_NETWORK_ON_DEMAND_THUMBNAILS false
@@ -1210,6 +1214,10 @@ static const bool input_autodetect_enable = true;
 #define DEFAULT_INPUT_SENSORS_ENABLE true
 #endif
 
+/* Automatically enable game focus when running or
+ * resuming content */
+#define DEFAULT_INPUT_AUTO_GAME_FOCUS AUTO_GAME_FOCUS_OFF
+
 /* Show the input descriptors set by the core instead
  * of the default ones. */
 static const bool input_descriptor_label_show = true;
@@ -1275,7 +1283,7 @@ static const bool ui_companion_toggle = false;
 
 #define DEFAULT_UI_MENUBAR_ENABLE true
 
-#if defined(__QNX__) || defined(_XBOX1) || defined(_XBOX360) || (defined(__MACH__) && defined(IOS)) || defined(ANDROID) || defined(WIIU) || defined(HAVE_NEON) || defined(GEKKO) || defined(__ARM_NEON__) | defined(__PS3__)
+#if defined(__QNX__) || defined(_XBOX1) || defined(_XBOX360) || (defined(__MACH__) && defined(IOS)) || defined(ANDROID) || defined(WIIU) || defined(HAVE_NEON) || defined(GEKKO) || defined(__ARM_NEON__) || defined(__PS3__)
 static const enum resampler_quality audio_resampler_quality_level = RESAMPLER_QUALITY_LOWER;
 #elif defined(PSP) || defined(_3DS) || defined(VITA) || defined(PS2) || defined(DINGUX)
 static const enum resampler_quality audio_resampler_quality_level = RESAMPLER_QUALITY_LOWEST;
@@ -1343,6 +1351,8 @@ static const bool enable_device_vibration    = false;
 #define DEFAULT_BUILDBOT_SERVER_URL "http://buildbot.libretro.com/nightly/apple/osx/x86_64/latest/"
 #elif defined(__i386__) || defined(__i486__) || defined(__i686__)
 #define DEFAULT_BUILDBOT_SERVER_URL "http://bot.libretro.com/nightly/apple/osx/x86/latest/"
+#elif defined(__aarch64__)
+#define DEFAULT_BUILDBOT_SERVER_URL "http://buildbot.libretro.com/nightly/apple/osx/arm64/latest/"
 #else
 #define DEFAULT_BUILDBOT_SERVER_URL "http://buildbot.libretro.com/nightly/apple/osx/ppc/latest/"
 #endif

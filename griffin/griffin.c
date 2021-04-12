@@ -270,8 +270,6 @@ VIDEO CONTEXT
 #include "../gfx/drivers_context/emscriptenegl_ctx.c"
 #elif defined(__PS3__) && !defined(__PSL1GHT__)
 #include "../gfx/drivers_context/ps3_ctx.c"
-#elif defined(__APPLE__) && !defined(TARGET_IPHONE_SIMULATOR) && !defined(TARGET_OS_IPHONE)
-#include "../gfx/drivers_context/cgl_ctx.c"
 #endif
 
 #if defined(HAVE_VIVANTE_FBDEV)
@@ -776,15 +774,12 @@ INPUT
 #endif
 
 #if defined(HAVE_LIBSHAKE)
-#if TARGET_OS_OSX
 #include "../deps/libShake/src/common/error.c"
 #include "../deps/libShake/src/common/helpers.c"
 #include "../deps/libShake/src/common/presets.c"
+#if defined(OSX)
 #include "../deps/libShake/src/osx/shake.c"
 #elif defined(__linux__) || (defined(BSD) && !defined(__MACH__))
-#include "../deps/libShake/src/common/error.c"
-#include "../deps/libShake/src/common/helpers.c"
-#include "../deps/libShake/src/common/presets.c"
 #include "../deps/libShake/src/linux/shake.c"
 #endif
 #endif
@@ -1025,6 +1020,7 @@ FILTERS
 #include "../gfx/video_filters/dot_matrix_3x.c"
 #include "../gfx/video_filters/dot_matrix_4x.c"
 #include "../gfx/video_filters/upscale_1_5x.c"
+#include "../gfx/video_filters/upscale_256x_320x240.c"
 #endif
 
 #ifdef HAVE_DSP_FILTER
@@ -1185,10 +1181,6 @@ UI
 ============================================================ */
 #if defined(_WIN32) && !defined(_XBOX) && !defined(__WINRT__)
 #include "../ui/drivers/ui_win32.c"
-#include "../ui/drivers/win32/ui_win32_window.c"
-#include "../ui/drivers/win32/ui_win32_browser_window.c"
-#include "../ui/drivers/win32/ui_win32_msg_window.c"
-#include "../ui/drivers/win32/ui_win32_application.c"
 #endif
 
 /*============================================================
@@ -1388,7 +1380,6 @@ MENU
 #include "../menu/cbs/menu_cbs_select.c"
 #include "../menu/cbs/menu_cbs_start.c"
 #include "../menu/cbs/menu_cbs_info.c"
-#include "../menu/cbs/menu_cbs_refresh.c"
 #include "../menu/cbs/menu_cbs_left.c"
 #include "../menu/cbs/menu_cbs_right.c"
 #include "../menu/cbs/menu_cbs_title.c"
@@ -1397,9 +1388,6 @@ MENU
 #include "../menu/cbs/menu_cbs_get_value.c"
 #include "../menu/cbs/menu_cbs_label.c"
 #include "../menu/cbs/menu_cbs_sublabel.c"
-#include "../menu/cbs/menu_cbs_up.c"
-#include "../menu/cbs/menu_cbs_down.c"
-#include "../menu/cbs/menu_cbs_contentlist_switch.c"
 #include "../menu/menu_displaylist.c"
 #ifdef HAVE_LIBRETRODB
 #include "../menu/menu_explore.c"

@@ -156,6 +156,7 @@ typedef struct settings
       unsigned input_keyboard_gamepad_mapping_type;
       unsigned input_poll_type_behavior;
       unsigned input_dingux_rumble_gain;
+      unsigned input_auto_game_focus;
 
       unsigned netplay_port;
       unsigned netplay_input_latency_frames_min;
@@ -207,8 +208,10 @@ typedef struct settings
       unsigned video_overscan_correction_bottom;
 #endif
       unsigned video_shader_delay;
+#ifdef HAVE_SCREENSHOTS
       unsigned notification_show_screenshot_duration;
       unsigned notification_show_screenshot_flash;
+#endif
 
       /* Accessibility */
       unsigned accessibility_narrator_speech_speed;
@@ -244,6 +247,7 @@ typedef struct settings
       unsigned menu_rgui_aspect_ratio_lock;
       unsigned menu_rgui_particle_effect;
       unsigned menu_ticker_type;
+      unsigned menu_scroll_delay;
       unsigned menu_content_show_add_entry;
 
       unsigned playlist_entry_remove_enable;
@@ -406,10 +410,10 @@ typedef struct settings
       char path_audio_dsp_plugin[PATH_MAX_LENGTH];
       char path_softfilter_plugin[PATH_MAX_LENGTH];
       char path_core_options[PATH_MAX_LENGTH];
-      char path_content_history[PATH_MAX_LENGTH];
       char path_content_favorites[PATH_MAX_LENGTH];
-      char path_content_music_history[PATH_MAX_LENGTH];
+      char path_content_history[PATH_MAX_LENGTH];
       char path_content_image_history[PATH_MAX_LENGTH];
+      char path_content_music_history[PATH_MAX_LENGTH];
       char path_content_video_history[PATH_MAX_LENGTH];
       char path_libretro_info[PATH_MAX_LENGTH];
       char path_cheat_settings[PATH_MAX_LENGTH];
@@ -420,8 +424,6 @@ typedef struct settings
       char directory_autoconfig[PATH_MAX_LENGTH];
       char directory_video_filter[PATH_MAX_LENGTH];
       char directory_video_shader[PATH_MAX_LENGTH];
-      char directory_content_history[PATH_MAX_LENGTH];
-      char directory_content_favorites[PATH_MAX_LENGTH];
       char directory_libretro[PATH_MAX_LENGTH];
       char directory_cursor[PATH_MAX_LENGTH];
       char directory_input_remapping[PATH_MAX_LENGTH];
@@ -434,6 +436,11 @@ typedef struct settings
       char directory_system[PATH_MAX_LENGTH];
       char directory_cache[PATH_MAX_LENGTH];
       char directory_playlist[PATH_MAX_LENGTH];
+      char directory_content_favorites[PATH_MAX_LENGTH];
+      char directory_content_history[PATH_MAX_LENGTH];
+      char directory_content_image_history[PATH_MAX_LENGTH];
+      char directory_content_music_history[PATH_MAX_LENGTH];
+      char directory_content_video_history[PATH_MAX_LENGTH];
       char directory_runtime_log[PATH_MAX_LENGTH];
       char directory_core_assets[PATH_MAX_LENGTH];
       char directory_assets[PATH_MAX_LENGTH];
@@ -544,7 +551,10 @@ typedef struct settings
       bool notification_show_config_override_load;
       bool notification_show_set_initial_disk;
       bool notification_show_fast_forward;
+#ifdef HAVE_SCREENSHOTS
       bool notification_show_screenshot;
+#endif
+      bool notification_show_refresh_rate;
       bool menu_widget_scale_auto;
       bool menu_show_start_screen;
       bool menu_pause_libretro;
@@ -769,6 +779,7 @@ typedef struct settings
       bool sort_screenshots_by_content_enable;
       bool config_save_on_exit;
       bool show_hidden_files;
+      bool use_last_start_directory;
 
       bool savefiles_in_content_dir;
       bool savestates_in_content_dir;

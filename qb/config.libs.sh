@@ -243,7 +243,17 @@ check_platform Darwin METAL 'Metal is' true
 if [ "$OS" = 'Darwin' ]; then
    check_lib '' COREAUDIO "-framework AudioUnit" AudioUnitInitialize
    check_lib '' CORETEXT "-framework CoreText" CTFontCreateWithName
-   check_lib '' COCOA "-framework AppKit" NSApplicationMain
+
+   if [ "$HAVE_METAL" = yes ]; then
+      check_lib '' COCOA_METAL "-framework AppKit" NSApplicationMain
+      add_opt OPENGL no
+      add_opt OPENGL1 no
+      add_opt OPENGL_CORE no
+      die : 'Notice: Metal cannot coexist with OpenGL (yet), so disabling OpenGL.'
+   else
+      check_lib '' COCOA "-framework AppKit" NSApplicationMain
+   fi
+
    check_lib '' AVFOUNDATION "-framework AVFoundation"
    check_lib '' CORELOCATION "-framework CoreLocation"
    check_lib '' IOHIDMANAGER "-framework IOKit" IOHIDManagerCreate
@@ -488,6 +498,7 @@ check_pkgconf DBUS dbus-1
 check_val '' UDEV "-ludev" '' libudev '' '' false
 check_val '' V4L2 -lv4l2 '' libv4l2 '' '' false
 check_val '' FREETYPE -lfreetype freetype2 freetype2 '' '' false
+check_val '' FONTCONFIG -lfontconfig fontconfig fontconfig '' '' false
 check_val '' X11 -lX11 '' x11 '' '' false
 
 if [ "$HAVE_X11" != 'no' ]; then
@@ -643,6 +654,10 @@ check_enabled 'OPENGL_CORE METAL VULKAN' SPIRV_CROSS SPIRV-Cross '' user
 check_macro NEON __ARM_NEON__
 
 add_define MAKEFILE OS "$OS"
+
+if [ "$ARCHITECTURE_NAME" = 'Power Macintosh' ]; then
+   HAVE_LANGEXTRA='no'
+fi
 
 if [ "$HAVE_DEBUG" = 'yes' ]; then
    add_define MAKEFILE DEBUG 1

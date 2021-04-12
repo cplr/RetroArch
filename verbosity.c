@@ -18,6 +18,10 @@
 #include <xtl.h>
 #endif
 
+#if defined(__PSL1GHT__) || defined(__PS3__)
+#include "ps3_defines.h"
+#endif
+
 #ifdef __MACH__
 #include <TargetConditionals.h>
 #if TARGET_IPHONE_SIMULATOR
@@ -350,6 +354,21 @@ void RARCH_LOG_BUFFER(uint8_t *data, size_t size)
          buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]);
    }
    RARCH_LOG("==================================\n");
+}
+
+void RARCH_DBG(const char *fmt, ...)
+{
+   va_list ap;
+   verbosity_state_t *g_verbosity = &main_verbosity_st;
+
+   if (!g_verbosity->verbosity)
+      return;
+   if (verbosity_log_level > 0)
+      return;
+
+   va_start(ap, fmt);
+   RARCH_LOG_V(FILE_PATH_LOG_INFO, fmt, ap);
+   va_end(ap);
 }
 
 void RARCH_LOG(const char *fmt, ...)

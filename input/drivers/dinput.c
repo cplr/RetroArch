@@ -1003,10 +1003,12 @@ static void dinput_grab_mouse(void *data, bool state)
    IDirectInputDevice8_Unacquire(di->mouse);
    IDirectInputDevice8_SetCooperativeLevel(di->mouse,
       (HWND)video_driver_window_get(),
-      state ?
-      (DISCL_EXCLUSIVE    | DISCL_FOREGROUND) :
       (DISCL_NONEXCLUSIVE | DISCL_FOREGROUND));
    IDirectInputDevice8_Acquire(di->mouse);
+
+#ifndef _XBOX
+   win32_clip_window(state);
+#endif
 }
 
 static uint64_t dinput_get_capabilities(void *data)

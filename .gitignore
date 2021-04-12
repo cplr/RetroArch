@@ -69,6 +69,7 @@ apple/RetroArch_iOS.xcodeproj/project.xcworkspace/*
 /rsound.h
 .pc
 /media/shaders_glsl/
+/media/shaders_slang/
 /obj-w32/
 .cproject
 .settings
@@ -78,6 +79,7 @@ convert_rumble.awk
 *~
 assets
 info
+content_favorites.lpl
 content_history.lpl
 content_image_history.lpl
 content_music_history.lpl

@@ -501,7 +501,7 @@ static struct android_app* android_app_create(ANativeActivity* activity,
    if (pipe(msgpipe))
    {
       RARCH_ERR("could not create pipe: %s.\n", strerror(errno));
-      if(android_app->savedState)
+      if (android_app->savedState)
         free(android_app->savedState);
       free(android_app);
       return NULL;
@@ -655,7 +655,7 @@ bool test_permissions(const char *path)
       "RetroArch", "Create %s in %s %s\n", buf, path,
       ret ? "true" : "false");
 
-   if(ret)
+   if (ret)
       rmdir(buf);
 
    return ret;
@@ -668,8 +668,7 @@ static void frontend_android_shutdown(bool unused)
    exit(0);
 }
 
-#else
-
+#elif !defined(DINGUX)
 static bool make_proc_acpi_key_val(char **_ptr, char **_key, char **_val)
 {
     char *ptr = *_ptr;
@@ -818,7 +817,6 @@ end:
    buf      = NULL;
    buf_info = NULL;
 }
-
 static void check_proc_acpi_sysfs_battery(const char *node,
       bool *have_battery, bool *charging,
       int *seconds, int *percent)
@@ -957,7 +955,7 @@ static bool int_string(char *str, int *val)
    if (!str)
       return false;
 
-   *val = (int) strtol(str, &endptr, 0);
+   *val = (int)strtol(str, &endptr, 0);
    return ((*str != '\0') && (*endptr == '\0'));
 }
 
@@ -1180,14 +1178,13 @@ static enum frontend_powerstate frontend_unix_get_powerstate(
       int *seconds, int *percent)
 {
    enum frontend_powerstate ret = FRONTEND_POWERSTATE_NONE;
-
 #if defined(ANDROID)
-   jint powerstate = ret;
-   jint battery_level = 0;
-   JNIEnv *env = jni_thread_getenv();
+   jint powerstate              = FRONTEND_POWERSTATE_NONE;
+   jint battery_level           = 0;
+   JNIEnv *env                  = jni_thread_getenv();
 
    if (!env || !g_android)
-      return ret;
+      return FRONTEND_POWERSTATE_NONE;
 
    if (g_android->getPowerstate)
       CALL_INT_METHOD(env, powerstate,
@@ -1235,7 +1232,7 @@ static enum frontend_powerstate frontend_unix_get_powerstate(
    return ret;
 }
 
-static enum frontend_architecture frontend_unix_get_architecture(void)
+static enum frontend_architecture frontend_unix_get_arch(void)
 {
    struct utsname buffer;
    const char *val        = NULL;
@@ -1328,17 +1325,23 @@ static void frontend_unix_get_lakka_version(char *s,
 
 static void frontend_unix_set_screen_brightness(int value)
 {
-   int brightness = 0;
+   char *buffer = NULL;
    char svalue[16] = {0};
-   #if defined(HAVE_LAKKA_SWITCH)
-   /* Values from 0 to 100 */
-   brightness = value;
-   #elif defined(HAVE_ODROIDGO2)
-   /* GOA screen PWM value does not linearly relate to perceived brightness */
-   brightness = (pow(1.0369f, value) - 1) * 7;
+   unsigned int max_brightness = 100;
+   #if !defined(HAVE_LAKKA_SWITCH)
+   filestream_read_file("/sys/devices/platform/backlight/backlight/backlight/max_brightness",
+                        &buffer, NULL);
+   if (buffer)
+   {
+      sscanf(buffer, "%u", &max_brightness);
+      free(buffer);
+   }
    #endif
 
-   snprintf(svalue, sizeof(svalue), "%d\n", brightness);
+   /* Calculate the brightness */
+   value = (value * max_brightness) / 100;
+
+   snprintf(svalue, sizeof(svalue), "%d\n", value);
    filestream_write_file("/sys/class/backlight/backlight/brightness",
                          svalue, strlen(svalue));
 }
@@ -1571,14 +1574,14 @@ static void frontend_unix_get_env(int *argc,
       /* set paths depending on the ability to write
        * to internal_storage_path */
 
-      if(!string_is_empty(internal_storage_path))
+      if (!string_is_empty(internal_storage_path))
       {
-         if(test_permissions(internal_storage_path))
+         if (test_permissions(internal_storage_path))
             storage_permissions = INTERNAL_STORAGE_WRITABLE;
       }
-      else if(!string_is_empty(internal_storage_app_path))
+      else if (!string_is_empty(internal_storage_app_path))
       {
-         if(test_permissions(internal_storage_app_path))
+         if (test_permissions(internal_storage_app_path))
             storage_permissions = INTERNAL_STORAGE_APPDIR_WRITABLE;
       }
       else
@@ -2156,7 +2159,7 @@ static int frontend_unix_parse_drive_list(void *data, bool load_content)
       strlcat(udisks_media_path, user, sizeof(udisks_media_path));
    }
 
-   if(!string_is_empty(base_path))
+   if (!string_is_empty(base_path))
    {
       menu_entries_append_enum(list, base_path,
             msg_hash_to_str(MENU_ENUM_LABEL_FILE_DETECT_CORE_LIST_PUSH_DIR),
@@ -2269,7 +2272,7 @@ static void frontend_unix_exitspawn(char *s, size_t len, char *args)
 }
 #endif
 
-static uint64_t frontend_unix_get_mem_total(void)
+static uint64_t frontend_unix_get_total_mem(void)
 {
 #if defined(DINGUX)
    char line[256];
@@ -2309,7 +2312,7 @@ static uint64_t frontend_unix_get_mem_total(void)
 #endif
 }
 
-static uint64_t frontend_unix_get_mem_free(void)
+static uint64_t frontend_unix_get_free_mem(void)
 {
    char line[256];
    unsigned long mem_available = 0;
@@ -2759,7 +2762,7 @@ end:
 #endif
 
 frontend_ctx_driver_t frontend_ctx_unix = {
-   frontend_unix_get_env,       /* environment_get */
+   frontend_unix_get_env,       /* get_env */
    frontend_unix_init,          /* init */
    frontend_unix_deinit,        /* deinit */
 #ifdef ANDROID
@@ -2783,26 +2786,26 @@ frontend_ctx_driver_t frontend_ctx_unix = {
    NULL,                         /* get_name */
 #endif
    frontend_unix_get_os,
-   frontend_unix_get_rating,    /* get_rating */
-   NULL,                         /* load_content */
-   frontend_unix_get_architecture,
+   frontend_unix_get_rating,           /* get_rating */
+   NULL,                               /* content_loaded */
+   frontend_unix_get_arch,             /* get_architecture */
    frontend_unix_get_powerstate,
    frontend_unix_parse_drive_list,
-   frontend_unix_get_mem_total,
-   frontend_unix_get_mem_free,
+   frontend_unix_get_total_mem,
+   frontend_unix_get_free_mem,
    frontend_unix_install_signal_handlers,
    frontend_unix_get_signal_handler_state,
    frontend_unix_set_signal_handler_state,
    frontend_unix_destroy_signal_handler_state,
-   NULL,                         /* attach_console */
-   NULL,                         /* detach_console */
+   NULL,                               /* attach_console */
+   NULL,                               /* detach_console */
 #ifdef HAVE_LAKKA
    frontend_unix_get_lakka_version,    /* get_lakka_version */
 #else
-   NULL,                         /* get_lakka_version */
+   NULL,                               /* get_lakka_version */
 #endif
 #if defined(HAVE_LAKKA_SWITCH) || (defined(HAVE_LAKKA) && defined(HAVE_ODROIDGO2))
-   frontend_unix_set_screen_brightness,    /* set_screen_brightness */
+   frontend_unix_set_screen_brightness,/* set_screen_brightness */
 #else 
    NULL,                         /* set_screen_brightness */
 #endif
@@ -2812,15 +2815,16 @@ frontend_ctx_driver_t frontend_ctx_unix = {
    frontend_unix_get_cpu_model_name,
    frontend_unix_get_user_language,
 #if (defined(__linux__) || defined(__unix__)) && !defined(ANDROID)
-   is_narrator_running_unix,
-   accessibility_speak_unix,
+   is_narrator_running_unix,     /* is_narrator_running */
+   accessibility_speak_unix,     /* accessibility_speak */
 #else
    NULL,                         /* is_narrator_running */
    NULL,                         /* accessibility_speak */
 #endif
 #ifdef ANDROID
-   "android"
+   "android",                    /* ident               */
 #else
-   "unix"
+   "unix",                       /* ident               */
 #endif
+   NULL                          /* get_video_driver    */
 };

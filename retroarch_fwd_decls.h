@@ -13,19 +13,10 @@ extern "C"
 #endif
 
 static void retroarch_fail(int error_code, const char *error);
-static void retroarch_core_options_intl_init(
-      struct rarch_state *p_rarch,
-      const struct
-      retro_core_options_intl *core_options_intl);
 static void ui_companion_driver_toggle(
       settings_t *settings,
       struct rarch_state *p_rarch,
       bool force);
-
-#ifdef HAVE_ACCESSIBILITY
-static void set_gamepad_input_override(struct rarch_state *p_rarch,
-      unsigned i, bool val);
-#endif
 
 #ifdef HAVE_LIBNX
 void libnx_apply_overclock(void);
@@ -34,14 +25,14 @@ void libnx_apply_overclock(void);
 #ifdef HAVE_TRANSLATE
 static bool is_narrator_running(struct rarch_state *p_rarch);
 #endif
-static bool accessibility_startup_message(struct rarch_state *p_rarch);
 #endif
 
 #ifdef HAVE_NETWORKING
 static void deinit_netplay(struct rarch_state *p_rarch);
 #endif
 
-static void retroarch_deinit_drivers(struct rarch_state *p_rarch);
+static void retroarch_deinit_drivers(struct rarch_state *p_rarch,
+      struct retro_callbacks *cbs);
 
 static bool midi_driver_read(uint8_t *byte);
 static bool midi_driver_write(uint8_t byte, uint32_t delta_time);
@@ -176,23 +167,28 @@ static bool accessibility_speak_priority(
 #ifdef HAVE_MENU
 static bool input_mouse_button_raw(
       struct rarch_state *p_rarch,
+      settings_t *settings,
       unsigned port, unsigned id);
-static void input_keyboard_line_append(
-      struct rarch_state *p_rarch,
+static bool input_keyboard_line_append(
+      struct input_keyboard_line *keyboard_line,
       const char *word);
-static const char **input_keyboard_start_line(void *userdata,
-      struct rarch_state *p_rarch,
+static const char **input_keyboard_start_line(
+      void *userdata,
+      struct input_keyboard_line *keyboard_line,
       input_keyboard_line_complete_t cb);
 
 static void menu_driver_list_free(
-      struct rarch_state *p_rarch,
+      const menu_ctx_driver_t *menu_driver_ctx,
       menu_ctx_list_t *list);
-static void menu_input_post_iterate(
+static int menu_input_post_iterate(
       struct rarch_state *p_rarch,
-      int *ret, unsigned action,
+      unsigned action,
       retro_time_t current_time);
-static void menu_input_reset(struct rarch_state *p_rarch);
 #endif
+
+static bool retroarch_apply_shader(
+      enum rarch_shader_type type, const char *preset_path,
+      bool message);
 
 static void video_driver_restore_cached(struct rarch_state *p_rarch,
       settings_t *settings);
@@ -200,5 +196,7 @@ static void video_driver_restore_cached(struct rarch_state *p_rarch,
 static const void *find_driver_nonempty(
       const char *label, int i,
       char *s, size_t len);
+
+static bool core_set_default_callbacks(struct retro_callbacks *cbs);
 
 #endif

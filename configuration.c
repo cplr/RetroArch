@@ -259,6 +259,11 @@ static const enum video_driver_enum VIDEO_DEFAULT_DRIVER = VIDEO_GL;
 #else
 static const enum video_driver_enum VIDEO_DEFAULT_DRIVER = VIDEO_METAL;
 #endif
+#elif defined(HAVE_OPENGL1) && defined(_MSC_VER) && (_MSC_VER <= 1600)
+/* On Windows XP and earlier, use gl1 by default
+ * (regular opengl has compatibility issues with
+ * obsolete hardware drivers...) */
+static const enum video_driver_enum VIDEO_DEFAULT_DRIVER = VIDEO_GL1;
 #elif defined(HAVE_VITA2D)
 static const enum video_driver_enum VIDEO_DEFAULT_DRIVER = VIDEO_VITA2D;
 #elif defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) || defined(HAVE_PSGL)
@@ -1287,16 +1292,16 @@ static struct config_path_setting *populate_settings_path(
    SETTING_PATH("rgui_menu_theme_preset",
          settings->paths.path_rgui_theme_preset, false, NULL, true);
 #endif
-   SETTING_PATH("content_history_path",
-         settings->paths.path_content_history, false, NULL, true);
    SETTING_PATH("content_favorites_path",
          settings->paths.path_content_favorites, false, NULL, true);
+   SETTING_PATH("content_history_path",
+         settings->paths.path_content_history, false, NULL, true);
+   SETTING_PATH("content_image_history_path",
+         settings->paths.path_content_image_history, false, NULL, true);
    SETTING_PATH("content_music_history_path",
          settings->paths.path_content_music_history, false, NULL, true);
    SETTING_PATH("content_video_history_path",
          settings->paths.path_content_video_history, false, NULL, true);
-   SETTING_PATH("content_image_history_path",
-         settings->paths.path_content_image_history, false, NULL, true);
 #ifdef HAVE_OVERLAY
    SETTING_PATH("input_overlay",
          settings->paths.path_overlay, false, NULL, true);
@@ -1317,8 +1322,6 @@ static struct config_path_setting *populate_settings_path(
          settings->paths.path_font, false, NULL, true);
    SETTING_PATH("cursor_directory",
          settings->paths.directory_cursor, false, NULL, true);
-   SETTING_PATH("content_history_dir",
-         settings->paths.directory_content_history, false, NULL, true);
    SETTING_PATH("screenshot_directory",
          settings->paths.directory_screenshot, true, NULL, true);
    SETTING_PATH("system_directory",
@@ -1343,6 +1346,16 @@ static struct config_path_setting *populate_settings_path(
          settings->paths.directory_thumbnails, true, NULL, true);
    SETTING_PATH("playlist_directory",
          settings->paths.directory_playlist, true, NULL, true);
+   SETTING_PATH("content_favorites_directory",
+         settings->paths.directory_content_favorites, true, NULL, true);
+   SETTING_PATH("content_history_directory",
+         settings->paths.directory_content_history, true, NULL, true);
+   SETTING_PATH("content_image_history_directory",
+         settings->paths.directory_content_image_history, true, NULL, true);
+   SETTING_PATH("content_music_history_directory",
+         settings->paths.directory_content_music_history, true, NULL, true);
+   SETTING_PATH("content_video_directory",
+         settings->paths.directory_content_video_history, true, NULL, true);
    SETTING_PATH("runtime_log_directory",
          settings->paths.directory_runtime_log, true, NULL, true);
    SETTING_PATH("joypad_autoconfig_dir",
@@ -1503,6 +1516,7 @@ static struct config_bool_setting *populate_settings_bool(
 #ifdef HAVE_SCREENSHOTS
    SETTING_BOOL("notification_show_screenshot", &settings->bools.notification_show_screenshot, true, DEFAULT_NOTIFICATION_SHOW_SCREENSHOT, false);
 #endif
+   SETTING_BOOL("notification_show_refresh_rate", &settings->bools.notification_show_refresh_rate, true, DEFAULT_NOTIFICATION_SHOW_REFRESH_RATE, false);
    SETTING_BOOL("menu_widget_scale_auto",        &settings->bools.menu_widget_scale_auto, true, DEFAULT_MENU_WIDGET_SCALE_AUTO, false);
    SETTING_BOOL("audio_enable_menu",             &settings->bools.audio_enable_menu, true, audio_enable_menu, false);
    SETTING_BOOL("audio_enable_menu_ok",          &settings->bools.audio_enable_menu_ok, true, audio_enable_menu_ok, false);
@@ -1727,6 +1741,7 @@ static struct config_bool_setting *populate_settings_bool(
    SETTING_BOOL("sort_screenshots_by_content_enable", &settings->bools.sort_screenshots_by_content_enable, true, default_sort_screenshots_by_content_enable, false);
    SETTING_BOOL("config_save_on_exit",          &settings->bools.config_save_on_exit, true, DEFAULT_CONFIG_SAVE_ON_EXIT, false);
    SETTING_BOOL("show_hidden_files",            &settings->bools.show_hidden_files, true, DEFAULT_SHOW_HIDDEN_FILES, false);
+   SETTING_BOOL("use_last_start_directory",     &settings->bools.use_last_start_directory, true, DEFAULT_USE_LAST_START_DIRECTORY, false);
    SETTING_BOOL("input_autodetect_enable",      &settings->bools.input_autodetect_enable, true, input_autodetect_enable, false);
 #if defined(HAVE_DINPUT) || defined(HAVE_WINRAWINPUT)
    SETTING_BOOL("input_nowinkey_enable",        &settings->bools.input_nowinkey_enable, true, false, false);
@@ -1870,7 +1885,7 @@ static struct config_uint_setting *populate_settings_uint(
    SETTING_UINT("input_max_users",              input_driver_get_uint(INPUT_ACTION_MAX_USERS),        true, input_max_users, false);
    SETTING_UINT("fps_update_interval",          &settings->uints.fps_update_interval, true, DEFAULT_FPS_UPDATE_INTERVAL, false);
    SETTING_UINT("memory_update_interval",       &settings->uints.memory_update_interval, true, DEFAULT_MEMORY_UPDATE_INTERVAL, false);
-   SETTING_UINT("input_menu_toggle_gamepad_combo", &settings->uints.input_menu_toggle_gamepad_combo, true, menu_toggle_gamepad_combo, false);
+   SETTING_UINT("input_menu_toggle_gamepad_combo", &settings->uints.input_menu_toggle_gamepad_combo, true, DEFAULT_MENU_TOGGLE_GAMEPAD_COMBO, false);
    SETTING_UINT("input_hotkey_block_delay",     &settings->uints.input_hotkey_block_delay, true, DEFAULT_INPUT_HOTKEY_BLOCK_DELAY, false);
 #ifdef GEKKO
    SETTING_UINT("input_mouse_scale",            &settings->uints.input_mouse_scale, true, DEFAULT_MOUSE_SCALE, false);
@@ -1878,6 +1893,7 @@ static struct config_uint_setting *populate_settings_uint(
 #if defined(DINGUX) && defined(HAVE_LIBSHAKE)
    SETTING_UINT("input_dingux_rumble_gain",     &settings->uints.input_dingux_rumble_gain, true, DEFAULT_DINGUX_RUMBLE_GAIN, false);
 #endif
+   SETTING_UINT("input_auto_game_focus",        &settings->uints.input_auto_game_focus, true, DEFAULT_INPUT_AUTO_GAME_FOCUS, false);
    SETTING_UINT("audio_latency",                &settings->uints.audio_latency, false, 0 /* TODO */, false);
    SETTING_UINT("audio_resampler_quality",      &settings->uints.audio_resampler_quality, true, audio_resampler_quality_level, false);
    SETTING_UINT("audio_block_frames",           &settings->uints.audio_block_frames, true, 0, false);
@@ -1918,6 +1934,7 @@ static struct config_uint_setting *populate_settings_uint(
    SETTING_UINT("menu_timedate_style",          &settings->uints.menu_timedate_style, true, DEFAULT_MENU_TIMEDATE_STYLE, false);
    SETTING_UINT("menu_timedate_date_separator", &settings->uints.menu_timedate_date_separator, true, DEFAULT_MENU_TIMEDATE_DATE_SEPARATOR, false);
    SETTING_UINT("menu_ticker_type",             &settings->uints.menu_ticker_type, true, DEFAULT_MENU_TICKER_TYPE, false);
+   SETTING_UINT("menu_scroll_delay",            &settings->uints.menu_scroll_delay, true, DEFAULT_MENU_SCROLL_DELAY, false);
    SETTING_UINT("content_show_add_entry",       &settings->uints.menu_content_show_add_entry, true, DEFAULT_MENU_CONTENT_SHOW_ADD_ENTRY, false);
 #ifdef HAVE_RGUI
    SETTING_UINT("rgui_menu_color_theme",        &settings->uints.menu_rgui_color_theme, true, DEFAULT_RGUI_COLOR_THEME, false);
@@ -1994,7 +2011,9 @@ static struct config_uint_setting *populate_settings_uint(
    SETTING_UINT("user_language",                msg_hash_get_uint(MSG_HASH_USER_LANGUAGE), true, DEFAULT_USER_LANGUAGE, false);
 #endif
 #endif
+#ifndef __APPLE__
    SETTING_UINT("bundle_assets_extract_version_current", &settings->uints.bundle_assets_extract_version_current, true, 0, false);
+#endif
    SETTING_UINT("bundle_assets_extract_last_version",    &settings->uints.bundle_assets_extract_last_version, true, 0, false);
    SETTING_UINT("input_overlay_show_physical_inputs_port", &settings->uints.input_overlay_show_physical_inputs_port, true, 0, false);
    SETTING_UINT("video_msg_bgcolor_red",        &settings->uints.video_msg_bgcolor_red, true, message_bgcolor_red, false);
@@ -2357,7 +2376,6 @@ void config_set_defaults(void *data)
 
    configuration_set_string(settings,
          settings->paths.network_buildbot_url, DEFAULT_BUILDBOT_SERVER_URL);
-
    configuration_set_string(settings,
          settings->paths.network_buildbot_assets_url,
          DEFAULT_BUILDBOT_ASSETS_SERVER_URL);
@@ -2398,6 +2416,11 @@ void config_set_defaults(void *data)
    *settings->paths.directory_dynamic_wallpapers = '\0';
    *settings->paths.directory_thumbnails = '\0';
    *settings->paths.directory_playlist = '\0';
+   *settings->paths.directory_content_favorites = '\0';
+   *settings->paths.directory_content_history = '\0';
+   *settings->paths.directory_content_image_history = '\0';
+   *settings->paths.directory_content_music_history = '\0';
+   *settings->paths.directory_content_video_history = '\0';
    *settings->paths.directory_runtime_log = '\0';
    *settings->paths.directory_autoconfig = '\0';
 #ifdef HAVE_MENU
@@ -2419,13 +2442,13 @@ void config_set_defaults(void *data)
    }
 
    *settings->paths.path_core_options      = '\0';
-   *settings->paths.path_content_history   = '\0';
    *settings->paths.path_content_favorites = '\0';
-   *settings->paths.path_content_music_history   = '\0';
+   *settings->paths.path_content_history   = '\0';
    *settings->paths.path_content_image_history   = '\0';
+   *settings->paths.path_content_music_history   = '\0';
    *settings->paths.path_content_video_history   = '\0';
    *settings->paths.path_cheat_settings    = '\0';
-#ifndef IOS
+#if !defined(__APPLE__)
    *settings->arrays.bundle_assets_src = '\0';
    *settings->arrays.bundle_assets_dst = '\0';
    *settings->arrays.bundle_assets_dst_subdir = '\0';
@@ -2443,7 +2466,6 @@ void config_set_defaults(void *data)
    *settings->paths.path_stream_url        = '\0';
    *settings->paths.path_softfilter_plugin = '\0';
 
-   *settings->paths.directory_content_history = '\0';
    *settings->paths.path_audio_dsp_plugin = '\0';
 
    *settings->paths.log_dir = '\0';
@@ -2478,6 +2500,26 @@ void config_set_defaults(void *data)
       configuration_set_string(settings,
             settings->paths.directory_playlist,
             g_defaults.dirs[DEFAULT_DIR_PLAYLIST]);
+   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_FAVORITES]))
+      configuration_set_string(settings,
+            settings->paths.directory_content_favorites,
+            g_defaults.dirs[DEFAULT_DIR_CONTENT_FAVORITES]);
+   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_HISTORY]))
+      configuration_set_string(settings,
+            settings->paths.directory_content_history,
+            g_defaults.dirs[DEFAULT_DIR_CONTENT_HISTORY]);
+   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_IMAGE_HISTORY]))
+      configuration_set_string(settings,
+            settings->paths.directory_content_image_history,
+            g_defaults.dirs[DEFAULT_DIR_CONTENT_IMAGE_HISTORY]);
+   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_MUSIC_HISTORY]))
+      configuration_set_string(settings,
+            settings->paths.directory_content_music_history,
+            g_defaults.dirs[DEFAULT_DIR_CONTENT_MUSIC_HISTORY]);
+   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_VIDEO_HISTORY]))
+      configuration_set_string(settings,
+            settings->paths.directory_content_video_history,
+            g_defaults.dirs[DEFAULT_DIR_CONTENT_VIDEO_HISTORY]);
    if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CORE]))
       fill_pathname_expand_special(settings->paths.directory_libretro,
             g_defaults.dirs[DEFAULT_DIR_CORE],
@@ -2591,10 +2633,6 @@ void config_set_defaults(void *data)
       configuration_set_string(settings,
             settings->paths.directory_resampler,
             g_defaults.dirs[DEFAULT_DIR_RESAMPLER]);
-   if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_CONTENT_HISTORY]))
-      configuration_set_string(settings,
-            settings->paths.directory_content_history,
-            g_defaults.dirs[DEFAULT_DIR_CONTENT_HISTORY]);
    if (!string_is_empty(g_defaults.dirs[DEFAULT_DIR_LOGS]))
       configuration_set_string(settings,
             settings->paths.log_dir,
@@ -2759,12 +2797,12 @@ static config_file_t *open_default_config_file(void)
       if (!saved)
       {
          /* WARN here to make sure user has a good chance of seeing it. */
-         RARCH_ERR("Failed to create new config file in: \"%s\".\n",
+         RARCH_ERR("[Config]: Failed to create new config file in: \"%s\".\n",
                conf_path);
          goto error;
       }
 
-      RARCH_WARN("Created new config file in: \"%s\".\n", conf_path);
+      RARCH_WARN("[Config]: Created new config file in: \"%s\".\n", conf_path);
    }
 #elif defined(OSX)
    if (!fill_pathname_application_data(application_data,
@@ -2810,7 +2848,7 @@ static config_file_t *open_default_config_file(void)
    {
       fill_pathname_join(conf_path, application_data,
             FILE_PATH_MAIN_CONFIG, sizeof(conf_path));
-      RARCH_LOG("Looking for config in: \"%s\".\n", conf_path);
+      RARCH_LOG("[Config]: Looking for config in: \"%s\".\n", conf_path);
       conf = config_file_new_from_path_to_string(conf_path);
    }
 
@@ -2819,7 +2857,7 @@ static config_file_t *open_default_config_file(void)
    {
       fill_pathname_join(conf_path, getenv("HOME"),
             "." FILE_PATH_MAIN_CONFIG, sizeof(conf_path));
-      RARCH_LOG("Looking for config in: \"%s\".\n", conf_path);
+      RARCH_LOG("[Config]: Looking for config in: \"%s\".\n", conf_path);
       conf = config_file_new_from_path_to_string(conf_path);
    }
 
@@ -2852,7 +2890,7 @@ static config_file_t *open_default_config_file(void)
 
          conf = config_file_new_from_path_to_string(skeleton_conf);
          if (conf)
-            RARCH_WARN("Config: using skeleton config \"%s\" as base for a new config file.\n", skeleton_conf);
+            RARCH_WARN("[Config]: Using skeleton config \"%s\" as base for a new config file.\n", skeleton_conf);
          else
             conf = config_file_new_alloc();
 
@@ -2867,12 +2905,12 @@ static config_file_t *open_default_config_file(void)
          if (!saved)
          {
             /* WARN here to make sure user has a good chance of seeing it. */
-            RARCH_ERR("Failed to create new config file in: \"%s\".\n",
+            RARCH_ERR("[Config]: Failed to create new config file in: \"%s\".\n",
                   conf_path);
             goto error;
          }
 
-         RARCH_WARN("Config: Created new config file in: \"%s\".\n",
+         RARCH_WARN("[Config]: Created new config file in: \"%s\".\n",
                conf_path);
       }
    }
@@ -2986,10 +3024,10 @@ static bool config_load_file(global_t *global,
       {
          bool result = config_append_file(conf, extra_path);
 
-         RARCH_LOG("Config: appending config \"%s\"\n", extra_path);
+         RARCH_LOG("[Config]: Appending config \"%s\".\n", extra_path);
 
          if (!result)
-            RARCH_ERR("Config: failed to append config \"%s\"\n", extra_path);
+            RARCH_ERR("[Config]: Failed to append config \"%s\".\n", extra_path);
          extra_path = strtok_r(NULL, "|", &save);
       }
    }
@@ -3180,80 +3218,85 @@ static bool config_load_file(global_t *global,
 
    path_config = path_get(RARCH_PATH_CONFIG);
 
-   if (string_is_empty(settings->paths.path_content_history))
-   {
-      if (string_is_empty(settings->paths.directory_content_history))
-         fill_pathname_resolve_relative(
-               settings->paths.path_content_history,
-               path_config,
-               FILE_PATH_CONTENT_HISTORY,
-               sizeof(settings->paths.path_content_history));
-      else
-         fill_pathname_join(settings->paths.path_content_history,
-               settings->paths.directory_content_history,
-               FILE_PATH_CONTENT_HISTORY,
-               sizeof(settings->paths.path_content_history));
-   }
-
    if (string_is_empty(settings->paths.path_content_favorites))
-   {
-      if (string_is_empty(settings->paths.directory_content_history))
+         strlcpy(settings->paths.directory_content_favorites, "default", sizeof(settings->paths.directory_content_favorites));
+
+   if (string_is_empty(settings->paths.directory_content_favorites) || string_is_equal(settings->paths.directory_content_favorites, "default"))
          fill_pathname_resolve_relative(
                settings->paths.path_content_favorites,
                path_config,
                FILE_PATH_CONTENT_FAVORITES,
                sizeof(settings->paths.path_content_favorites));
-      else
-         fill_pathname_join(settings->paths.path_content_favorites,
-               settings->paths.directory_content_history,
+   else
+         fill_pathname_join(
+               settings->paths.path_content_favorites,
+               settings->paths.directory_content_favorites,
                FILE_PATH_CONTENT_FAVORITES,
                sizeof(settings->paths.path_content_favorites));
-   }
 
-   if (string_is_empty(settings->paths.path_content_music_history))
-   {
-      if (string_is_empty(settings->paths.directory_content_history))
-         fill_pathname_resolve_relative(
-               settings->paths.path_content_music_history,
-               path_config,
-               FILE_PATH_CONTENT_MUSIC_HISTORY,
-               sizeof(settings->paths.path_content_music_history));
-      else
-         fill_pathname_join(settings->paths.path_content_music_history,
-               settings->paths.directory_content_history,
-               FILE_PATH_CONTENT_MUSIC_HISTORY,
-               sizeof(settings->paths.path_content_music_history));
-   }
+   if (string_is_empty(settings->paths.path_content_history))
+         strlcpy(settings->paths.directory_content_history, "default", sizeof(settings->paths.directory_content_history));
 
-   if (string_is_empty(settings->paths.path_content_video_history))
-   {
-      if (string_is_empty(settings->paths.directory_content_history))
+   if (string_is_empty(settings->paths.directory_content_history) || string_is_equal(settings->paths.directory_content_history, "default"))
          fill_pathname_resolve_relative(
-               settings->paths.path_content_video_history,
+               settings->paths.path_content_history,
                path_config,
-               FILE_PATH_CONTENT_VIDEO_HISTORY,
-               sizeof(settings->paths.path_content_video_history));
-      else
-         fill_pathname_join(settings->paths.path_content_video_history,
+               FILE_PATH_CONTENT_HISTORY,
+               sizeof(settings->paths.path_content_history));
+   else
+         fill_pathname_join(
+               settings->paths.path_content_history,
                settings->paths.directory_content_history,
-               FILE_PATH_CONTENT_VIDEO_HISTORY,
-               sizeof(settings->paths.path_content_video_history));
-   }
+               FILE_PATH_CONTENT_HISTORY,
+               sizeof(settings->paths.path_content_history));
 
    if (string_is_empty(settings->paths.path_content_image_history))
-   {
-      if (string_is_empty(settings->paths.directory_content_history))
+         strlcpy(settings->paths.directory_content_image_history, "default", sizeof(settings->paths.directory_content_image_history));
+
+   if (string_is_empty(settings->paths.directory_content_image_history) || string_is_equal(settings->paths.directory_content_image_history, "default"))
          fill_pathname_resolve_relative(
                settings->paths.path_content_image_history,
                path_config,
                FILE_PATH_CONTENT_IMAGE_HISTORY,
                sizeof(settings->paths.path_content_image_history));
-      else
-         fill_pathname_join(settings->paths.path_content_image_history,
-               settings->paths.directory_content_history,
+   else
+         fill_pathname_join(
+               settings->paths.path_content_image_history,
+               settings->paths.directory_content_image_history,
                FILE_PATH_CONTENT_IMAGE_HISTORY,
                sizeof(settings->paths.path_content_image_history));
-   }
+
+   if (string_is_empty(settings->paths.path_content_music_history))
+         strlcpy(settings->paths.directory_content_music_history, "default", sizeof(settings->paths.directory_content_music_history));
+
+   if (string_is_empty(settings->paths.directory_content_music_history) || string_is_equal(settings->paths.directory_content_music_history, "default"))
+         fill_pathname_resolve_relative(
+               settings->paths.path_content_music_history,
+               path_config,
+               FILE_PATH_CONTENT_MUSIC_HISTORY,
+               sizeof(settings->paths.path_content_music_history));
+   else
+         fill_pathname_join(
+               settings->paths.path_content_music_history,
+               settings->paths.directory_content_music_history,
+               FILE_PATH_CONTENT_MUSIC_HISTORY,
+               sizeof(settings->paths.path_content_music_history));
+
+   if (string_is_empty(settings->paths.path_content_video_history))
+         strlcpy(settings->paths.directory_content_video_history, "default", sizeof(settings->paths.directory_content_video_history));
+
+   if (string_is_empty(settings->paths.directory_content_video_history) || string_is_equal(settings->paths.directory_content_video_history, "default"))
+         fill_pathname_resolve_relative(
+               settings->paths.path_content_video_history,
+               path_config,
+               FILE_PATH_CONTENT_VIDEO_HISTORY,
+               sizeof(settings->paths.path_content_video_history));
+   else
+         fill_pathname_join(
+               settings->paths.path_content_video_history,
+               settings->paths.directory_content_video_history,
+               FILE_PATH_CONTENT_VIDEO_HISTORY,
+               sizeof(settings->paths.path_content_video_history));
 
    if (!string_is_empty(settings->paths.directory_screenshot))
    {
@@ -3261,10 +3304,24 @@ static bool config_load_file(global_t *global,
          *settings->paths.directory_screenshot = '\0';
       else if (!path_is_directory(settings->paths.directory_screenshot))
       {
-         RARCH_WARN("screenshot_directory is not an existing directory, ignoring ...\n");
+         RARCH_WARN("[Config]: 'screenshot_directory' is not an existing directory, ignoring ...\n");
          *settings->paths.directory_screenshot = '\0';
       }
    }
+   
+#if defined(__APPLE__) && defined(OSX)
+#if defined(__aarch64__)
+   /* Wrong architecture, set it back to arm64 */
+   if (string_is_equal(settings->paths.network_buildbot_url, "http://buildbot.libretro.com/nightly/apple/osx/x86_64/latest/"))
+       configuration_set_string(settings,
+             settings->paths.network_buildbot_url, DEFAULT_BUILDBOT_SERVER_URL);
+#elif defined(__x86_64__)
+   /* Wrong architecture, set it back to x86_64 */
+   if (string_is_equal(settings->paths.network_buildbot_url, "http://buildbot.libretro.com/nightly/apple/osx/arm64/latest/"))
+       configuration_set_string(settings,
+             settings->paths.network_buildbot_url, DEFAULT_BUILDBOT_SERVER_URL);
+#endif
+#endif
 
    if (string_is_equal(settings->paths.path_menu_wallpaper, "default"))
       *settings->paths.path_menu_wallpaper = '\0';
@@ -3286,6 +3343,16 @@ static bool config_load_file(global_t *global,
       *settings->paths.directory_thumbnails = '\0';
    if (string_is_equal(settings->paths.directory_playlist, "default"))
       *settings->paths.directory_playlist = '\0';
+   if (string_is_equal(settings->paths.directory_content_favorites, "default"))
+      *settings->paths.directory_content_favorites = '\0';
+   if (string_is_equal(settings->paths.directory_content_history, "default"))
+      *settings->paths.directory_content_history = '\0';
+   if (string_is_equal(settings->paths.directory_content_image_history, "default"))
+      *settings->paths.directory_content_image_history = '\0';
+   if (string_is_equal(settings->paths.directory_content_music_history, "default"))
+      *settings->paths.directory_content_music_history = '\0';
+   if (string_is_equal(settings->paths.directory_content_video_history, "default"))
+      *settings->paths.directory_content_video_history = '\0';
    if (string_is_equal(settings->paths.directory_runtime_log, "default"))
       *settings->paths.directory_runtime_log = '\0';
 #ifdef HAVE_MENU
@@ -3359,7 +3426,7 @@ static bool config_load_file(global_t *global,
          }
       }
       else
-         RARCH_WARN("savefile_directory is not a directory, ignoring ...\n");
+         RARCH_WARN("[Config]: 'savefile_directory' is not a directory, ignoring ...\n");
    }
 
    if (!retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL) &&
@@ -3382,7 +3449,7 @@ static bool config_load_file(global_t *global,
          }
       }
       else
-         RARCH_WARN("savestate_directory is not a directory, ignoring ...\n");
+         RARCH_WARN("[Config]: 'savestate_directory' is not a directory, ignoring ...\n");
    }
 
    config_read_keybinds_conf(conf);
@@ -3511,7 +3578,7 @@ bool config_load_override(void *data)
    /* Create a new config file from core_path */
    if (config_file_exists(core_path))
    {
-      RARCH_LOG("[Overrides]: Core-specific overrides found at %s.\n",
+      RARCH_LOG("[Overrides]: Core-specific overrides found at \"%s\".\n",
             core_path);
 
       path_set(RARCH_PATH_CONFIG_APPEND, core_path);
@@ -3519,7 +3586,7 @@ bool config_load_override(void *data)
       should_append = true;
    }
    else
-      RARCH_LOG("[Overrides]: No core-specific overrides found at %s.\n",
+      RARCH_LOG("[Overrides]: No core-specific overrides found at \"%s\".\n",
             core_path);
 
    /* per-content-dir overrides */
@@ -3530,8 +3597,8 @@ bool config_load_override(void *data)
 
       temp_path[0]    = '\0';
 
-      RARCH_LOG("[Overrides]: Content dir-specific overrides found at %s.\n",
-            game_path);
+      RARCH_LOG("[Overrides]: Content dir-specific overrides found at \"%s\".\n",
+            content_path);
 
       if (should_append)
       {
@@ -3548,7 +3615,7 @@ bool config_load_override(void *data)
       should_append = true;
    }
    else
-      RARCH_LOG("[Overrides]: No content-dir-specific overrides found at %s.\n",
+      RARCH_LOG("[Overrides]: No content-dir-specific overrides found at \"%s\".\n",
          content_path);
 
    /* per-game overrides */
@@ -3559,12 +3626,12 @@ bool config_load_override(void *data)
 
       temp_path[0]    = '\0';
 
-      RARCH_LOG("[Overrides]: Game-specific overrides found at %s.\n",
+      RARCH_LOG("[Overrides]: Game-specific overrides found at \"%s\".\n",
             game_path);
 
       if (should_append)
       {
-         RARCH_LOG("[Overrides]: game-specific overrides stacking on top of previous overrides\n");
+         RARCH_LOG("[Overrides]: Game-specific overrides stacking on top of previous overrides.\n");
          strlcpy(temp_path, path_get(RARCH_PATH_CONFIG_APPEND), sizeof(temp_path));
          strlcat(temp_path, "|", sizeof(temp_path));
          strlcat(temp_path, game_path, sizeof(temp_path));
@@ -3577,7 +3644,7 @@ bool config_load_override(void *data)
       should_append = true;
    }
    else
-      RARCH_LOG("[Overrides]: No game-specific overrides found at %s.\n",
+      RARCH_LOG("[Overrides]: No game-specific overrides found at \"%s\".\n",
             game_path);
 
    if (!should_append)
@@ -3687,7 +3754,7 @@ bool config_load_remap(const char *directory_input_remapping,
 
    strlcpy(remap_directory,
          directory_input_remapping, sizeof(remap_directory));
-   RARCH_LOG("[Remaps]: remap directory: %s\n", remap_directory);
+   RARCH_LOG("[Remaps]: Remap directory: \"%s\".\n", remap_directory);
 
    /* Concatenate strings into full paths for core_path, game_path */
    fill_pathname_join_special_ext(core_path,
@@ -3715,7 +3782,7 @@ bool config_load_remap(const char *directory_input_remapping,
    /* If a game remap file exists, load it. */
    if ((new_conf = config_file_new_from_path_to_string(game_path)))
    {
-      RARCH_LOG("[Remaps]: game-specific remap found at %s.\n", game_path);
+      RARCH_LOG("[Remaps]: Game-specific remap found at \"%s\".\n", game_path);
       if (input_remapping_load_file(new_conf, game_path))
       {
          rarch_ctl(RARCH_CTL_SET_REMAPS_GAME_ACTIVE, NULL);
@@ -3728,7 +3795,7 @@ bool config_load_remap(const char *directory_input_remapping,
    /* If a content-dir remap file exists, load it. */
    if ((new_conf = config_file_new_from_path_to_string(content_path)))
    {
-      RARCH_LOG("[Remaps]: content-dir-specific remap found at %s.\n", content_path);
+      RARCH_LOG("[Remaps]: Content-dir-specific remap found at \"%s\".\n", content_path);
       if (input_remapping_load_file(new_conf, content_path))
       {
          rarch_ctl(RARCH_CTL_SET_REMAPS_CONTENT_DIR_ACTIVE, NULL);
@@ -3740,7 +3807,7 @@ bool config_load_remap(const char *directory_input_remapping,
    /* If a core remap file exists, load it. */
    if ((new_conf = config_file_new_from_path_to_string(core_path)))
    {
-      RARCH_LOG("[Remaps]: core-specific remap found at %s.\n", core_path);
+      RARCH_LOG("[Remaps]: Core-specific remap found at \"%s\".\n", core_path);
       if (input_remapping_load_file(new_conf, core_path))
       {
          rarch_ctl(RARCH_CTL_SET_REMAPS_CORE_ACTIVE, NULL);
@@ -3771,16 +3838,16 @@ static void config_parse_file(global_t *global)
 {
    if (path_is_empty(RARCH_PATH_CONFIG))
    {
-      RARCH_LOG("[config] Loading default config.\n");
+      RARCH_LOG("[Config]: Loading default config.\n");
    }
 
    {
       const char *config_path = path_get(RARCH_PATH_CONFIG);
-      RARCH_LOG("[config] loading config from: %s.\n", config_path);
+      RARCH_LOG("[Config]: Loading config from: \"%s\".\n", config_path);
 
       if (!config_load_file(global, config_path, config_get_ptr()))
       {
-         RARCH_ERR("[config] couldn't find config at path: \"%s\"\n",
+         RARCH_ERR("[Config]: Couldn't find config at path: \"%s\".\n",
                config_path);
       }
    }
@@ -3821,7 +3888,7 @@ bool config_save_autoconf_profile(const
       "~", "#", "%", "&", "*", "{", "}", "\\", ":", "[", "]", "?", "/", "|", "\'", "\"",
       NULL
    };
-   size_t i;
+   unsigned i;
    char buf[PATH_MAX_LENGTH];
    char autoconf_file[PATH_MAX_LENGTH];
    config_file_t *conf                  = NULL;
@@ -4360,15 +4427,15 @@ bool config_save_overrides(enum override_type type, void *data)
       switch (type)
       {
          case OVERRIDE_CORE:
-            RARCH_LOG ("[Overrides]: path %s\n", core_path);
+            RARCH_LOG ("[Overrides]: Path \"%s\".\n", core_path);
             ret = config_file_write(conf, core_path, true);
             break;
          case OVERRIDE_GAME:
-            RARCH_LOG ("[Overrides]: path %s\n", game_path);
+            RARCH_LOG ("[Overrides]: Path \"%s\".\n", game_path);
             ret = config_file_write(conf, game_path, true);
             break;
          case OVERRIDE_CONTENT_DIR:
-            RARCH_LOG ("[Overrides]: path %s\n", content_path);
+            RARCH_LOG ("[Overrides]: Path \"%s\".\n", content_path);
             ret = config_file_write(conf, content_path, true);
             break;
          case OVERRIDE_NONE:
@@ -4758,7 +4825,7 @@ void config_load_file_salamander(void)
 
    /* Read 'libretro_path' value and update
     * RARCH_PATH_CORE */
-   RARCH_LOG("[config] Loading salamander config from: \"%s\".\n",
+   RARCH_LOG("[Config]: Loading salamander config from: \"%s\".\n",
          config_path);
 
    if (config_get_path(config, "libretro_path",
@@ -4806,10 +4873,10 @@ void config_save_file_salamander(void)
 
 end:
    if (success)
-      RARCH_LOG("[config] Saving salamander config to: \"%s\".\n",
+      RARCH_LOG("[Config]: Saving salamander config to: \"%s\".\n",
             config_path);
    else
-      RARCH_ERR("[config] Failed to create new salamander config file in: \"%s\".\n",
+      RARCH_ERR("[Config]: Failed to create new salamander config file in: \"%s\".\n",
             config_path);
 
    if (config)

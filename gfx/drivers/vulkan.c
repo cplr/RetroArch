@@ -1345,7 +1345,7 @@ static void vulkan_set_nonblock_state(void *data, bool state,
    if (!vk)
       return;
 
-   RARCH_LOG("[Vulkan]: VSync => %s\n", state ? "off" : "on");
+   RARCH_LOG("[Vulkan]: VSync => %s\n", state ? "OFF" : "ON");
 
    if (!state)
       interval = swap_interval;
@@ -1592,6 +1592,13 @@ static void vulkan_readback(vk_t *vk)
    struct vk_texture *staging;
    struct video_viewport vp;
    VkMemoryBarrier barrier;
+
+   vp.x                                   = 0;
+   vp.y                                   = 0;
+   vp.width                               = 0;
+   vp.height                              = 0;
+   vp.full_width                          = 0;
+   vp.full_height                         = 0;
 
    vulkan_viewport_info(vk, &vp);
 

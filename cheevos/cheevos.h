@@ -42,8 +42,11 @@ enum
 };
 
 bool rcheevos_load(const void *data);
+size_t rcheevos_get_serialize_size(void);
+bool rcheevos_get_serialized_data(void* buffer);
+bool rcheevos_set_serialized_data(void* buffer);
 
-void rcheevos_reset_game(void);
+void rcheevos_reset_game(bool widgets_ready);
 
 void rcheevos_populate_menu(void* data);
 void rcheevos_populate_hardcore_pause_menu(void* data);
@@ -51,7 +54,7 @@ void rcheevos_get_achievement_state(unsigned index, char* buffer, size_t buffer_
 
 bool rcheevos_get_description(rcheevos_ctx_desc_t *desc);
 
-void rcheevos_pause_hardcore();
+void rcheevos_pause_hardcore(void);
 
 bool rcheevos_unload(void);
 

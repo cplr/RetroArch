@@ -685,6 +685,14 @@ MSG_HASH(
    "deferred_dropdown_box_list_disk_index"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_DROPDOWN_BOX_LIST_INPUT_DEVICE_TYPE,
+   "deferred_dropdown_box_list_input_device_type"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_DROPDOWN_BOX_LIST_INPUT_DEVICE_INDEX,
+   "deferred_dropdown_box_list_input_device_index"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_DEFERRED_DROPDOWN_BOX_LIST_INPUT_DESCRIPTION,
    "deferred_dropdown_box_list_input_description"
    )
@@ -857,6 +865,10 @@ MSG_HASH(
    "deferred_input_settings_list"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_INPUT_TURBO_FIRE_SETTINGS_LIST,
+   "deferred_input_turbo_fire_settings_list"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_DEFERRED_INPUT_HAPTIC_FEEDBACK_SETTINGS_LIST,
    "deferred_input_haptic_feedback_settings_list"
    )
@@ -875,6 +887,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_DEFERRED_ACCESSIBILITY_SETTINGS_LIST,
    "deferred_accessibility_settings_list"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_POWER_MANAGEMENT_SETTINGS_LIST,
+   "deferred_power_management_settings_list"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_DEFERRED_LAKKA_LIST,
@@ -1247,6 +1263,38 @@ MSG_HASH(
    "game_specific_options"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_CORE_OPTION_OVERRIDE_LIST,
+   "core_option_override_list"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_CORE_OPTION_OVERRIDE_LIST,
+   "deferred_core_option_override_list"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_GAME_SPECIFIC_CORE_OPTIONS_CREATE,
+   "game_specific_core_options_create"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_GAME_SPECIFIC_CORE_OPTIONS_REMOVE,
+   "game_specific_core_options_remove"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_FOLDER_SPECIFIC_CORE_OPTIONS_CREATE,
+   "folder_specific_core_options_create"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_FOLDER_SPECIFIC_CORE_OPTIONS_REMOVE,
+   "folder_specific_core_options_remove"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CORE_OPTION_OVERRIDE_INFO,
+   "core_option_override_info"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CORE_OPTIONS_RESET,
+   "core_options_reset"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_GAME_SPECIFIC_OPTIONS_CREATE,
    "game_specific_options_create"
    )
@@ -1343,6 +1391,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_INPUT_SENSORS_ENABLE,
    "input_sensors_enable"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_INPUT_AUTO_GAME_FOCUS,
+   "input_auto_game_focus"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_INPUT_BUTTON_AXIS_THRESHOLD,
@@ -2131,6 +2183,26 @@ MSG_HASH(
    "playlist_directory"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_CONTENT_FAVORITES_DIRECTORY,
+   "content_favorites_directory"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CONTENT_HISTORY_DIRECTORY,
+   "content_history_directory"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CONTENT_IMAGE_HISTORY_DIRECTORY,
+   "content_image_history_directory"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CONTENT_MUSIC_HISTORY_DIRECTORY,
+   "content_music_history_directory"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CONTENT_VIDEO_HISTORY_DIRECTORY,
+   "content_video_history_directory"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_RUNTIME_LOG_DIRECTORY,
    "runtime_log_directory"
    )
@@ -2715,6 +2787,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_SHOW_HIDDEN_FILES,
    "show_hidden_files"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_USE_LAST_START_DIRECTORY,
+   "use_last_start_directory"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_SHUTDOWN,
@@ -3747,6 +3823,10 @@ MSG_HASH(
    "menu_scroll_fast"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_MENU_SCROLL_DELAY,
+   "menu_scroll_delay"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_CORE_LOCK,
    "core_lock"
    )
@@ -4545,6 +4625,10 @@ MSG_HASH(
    "notification_show_screenshot_flash"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_NOTIFICATION_SHOW_REFRESH_RATE,
+   "notification_show_refresh_rate"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_VIDEO_SHADERS_ENABLE,
    "video_shader_enable"
    )
@@ -4821,6 +4905,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_INPUT_MENU_SETTINGS,
    "input_menu_settings"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_INPUT_TURBO_FIRE_SETTINGS,
+   "input_turbo_fire_settings"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_INPUT_HAPTIC_FEEDBACK_SETTINGS,

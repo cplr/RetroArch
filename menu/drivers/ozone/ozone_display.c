@@ -83,6 +83,7 @@ static void ozone_cursor_animation_cb(void *userdata)
 
 static void ozone_draw_cursor_slice(
       ozone_handle_t *ozone,
+      gfx_display_t *p_disp,
       void *userdata,
       unsigned video_width,
       unsigned video_height,
@@ -95,9 +96,10 @@ static void ozone_draw_cursor_slice(
    int slice_y           = (int)y + 8 * scale_factor;
    unsigned slice_new_w  = width + (24 + 1) * scale_factor;
    unsigned slice_new_h  = height + 20 * scale_factor;
-   gfx_display_t            *p_disp  = disp_get_ptr();
-   gfx_display_ctx_driver_t *dispctx = p_disp->dispctx;
-   static float last_alpha           = 0.0f;
+   gfx_display_ctx_driver_t 
+      *dispctx           = p_disp->dispctx;
+   static float 
+      last_alpha         = 0.0f;
 
    if (alpha != last_alpha)
    {
@@ -111,35 +113,37 @@ static void ozone_draw_cursor_slice(
 
    /* Cursor without border */
    gfx_display_draw_texture_slice(
-      userdata,
-      video_width,
-      video_height,
-      slice_x,
-      slice_y,
-      80, 80,
-      slice_new_w,
-      slice_new_h,
-      video_width, video_height,
-      ozone->theme_dynamic.cursor_alpha,
-      20, scale_factor,
-      ozone->theme->textures[OZONE_THEME_TEXTURE_CURSOR_NO_BORDER]
-   );
+         p_disp,
+         userdata,
+         video_width,
+         video_height,
+         slice_x,
+         slice_y,
+         80, 80,
+         slice_new_w,
+         slice_new_h,
+         video_width, video_height,
+         ozone->theme_dynamic.cursor_alpha,
+         20, scale_factor,
+         ozone->theme->textures[OZONE_THEME_TEXTURE_CURSOR_NO_BORDER]
+         );
 
    /* Tainted border */
    gfx_display_draw_texture_slice(
-      userdata,
-      video_width,
-      video_height,
-      slice_x,
-      slice_y,
-      80, 80,
-      slice_new_w,
-      slice_new_h,
-      video_width, video_height,
-      ozone->theme_dynamic.cursor_border,
-      20, scale_factor,
-      ozone->textures[OZONE_TEXTURE_CURSOR_BORDER]
-   );
+         p_disp,
+         userdata,
+         video_width,
+         video_height,
+         slice_x,
+         slice_y,
+         80, 80,
+         slice_new_w,
+         slice_new_h,
+         video_width, video_height,
+         ozone->theme_dynamic.cursor_border,
+         20, scale_factor,
+         ozone->textures[OZONE_TEXTURE_CURSOR_BORDER]
+         );
 
    if (dispctx && dispctx->blend_end)
       dispctx->blend_end(userdata);
@@ -147,6 +151,7 @@ static void ozone_draw_cursor_slice(
 
 static void ozone_draw_cursor_fallback(
       ozone_handle_t *ozone,
+      gfx_display_t *p_disp,
       void *userdata,
       unsigned video_width,
       unsigned video_height,
@@ -165,6 +170,7 @@ static void ozone_draw_cursor_fallback(
 
    /* Fill */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -180,6 +186,7 @@ static void ozone_draw_cursor_fallback(
 
    /* Top */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -193,6 +200,7 @@ static void ozone_draw_cursor_fallback(
 
    /* Bottom */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -206,6 +214,7 @@ static void ozone_draw_cursor_fallback(
 
    /* Left */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -219,6 +228,7 @@ static void ozone_draw_cursor_fallback(
 
    /* Right */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -253,6 +263,7 @@ void ozone_restart_cursor_animation(ozone_handle_t *ozone)
 
 void ozone_draw_cursor(
       ozone_handle_t *ozone,
+      gfx_display_t *p_disp,
       void *userdata,
       unsigned video_width,
       unsigned video_height,
@@ -269,11 +280,14 @@ void ozone_draw_cursor(
 
    /* Draw the cursor */
    if (ozone->has_all_assets)
-      ozone_draw_cursor_slice(ozone, userdata,
+      ozone_draw_cursor_slice(ozone, 
+            p_disp,
+            userdata,
             video_width, video_height,
             new_x, width, height, new_y, alpha);
    else
       ozone_draw_cursor_fallback(ozone,
+            p_disp,
             userdata,
             video_width,
             video_height,
@@ -281,6 +295,7 @@ void ozone_draw_cursor(
 }
 
 void ozone_draw_icon(
+      gfx_display_t *p_disp,
       void *userdata,
       unsigned video_width,
       unsigned video_height,
@@ -296,8 +311,6 @@ void ozone_draw_icon(
    gfx_display_ctx_draw_t draw;
    struct video_coords coords;
    math_matrix_4x4 mymat;
-   gfx_display_t            
-      *p_disp               = disp_get_ptr();
    gfx_display_ctx_driver_t 
       *dispctx              = p_disp->dispctx;
 
@@ -308,7 +321,7 @@ void ozone_draw_icon(
    rotate_draw.scale_z      = 1;
    rotate_draw.scale_enable = true;
 
-   gfx_display_rotate_z(&rotate_draw, userdata);
+   gfx_display_rotate_z(p_disp, &rotate_draw, userdata);
 
    coords.vertices      = 4;
    coords.vertex        = NULL;
@@ -329,8 +342,7 @@ void ozone_draw_icon(
    draw.pipeline_id     = 0;
 
    if (draw.height > 0 && draw.width > 0)
-      if (dispctx && dispctx->draw)
-         dispctx->draw(&draw, userdata, video_width, video_height);
+      dispctx->draw(&draw, userdata, video_width, video_height);
 }
 
 void ozone_draw_backdrop(
@@ -346,6 +358,7 @@ void ozone_draw_backdrop(
       0.00, 0.00, 0.00, 0.75,
    };
    static float last_alpha           = 0.0f;
+   gfx_display_t *p_disp             = disp_get_ptr();
 
    /* TODO: Replace this backdrop by a blur shader 
     * on the whole screen if available */
@@ -356,6 +369,7 @@ void ozone_draw_backdrop(
    }
 
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -376,6 +390,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 {
    unsigned i;
    char message[2048];
+   gfx_display_t *p_disp               = disp_get_ptr();
    const char *text                    = str;
    unsigned text_color                 = 0xffffffff;
    static float ozone_osk_backdrop[16] = {
@@ -403,6 +418,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
    /* Border */
    /* Top */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -416,6 +432,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 
    /* Bottom */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -429,6 +446,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 
    /* Left */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -442,6 +460,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 
    /* Right */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -456,6 +475,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
    /* Backdrop */
    /* TODO: Remove the backdrop if blur shader is available */
    gfx_display_draw_quad(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -509,6 +529,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
                      ozone->fonts.entries_label.font, msg,
                      (unsigned)strlen(msg), 1);
             gfx_display_draw_quad(
+                  p_disp,
                   userdata,
                   video_width,
                   video_height,
@@ -534,6 +555,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 
    /* Keyboard */
    gfx_display_draw_keyboard(
+         p_disp,
          userdata,
          video_width,
          video_height,
@@ -548,6 +570,7 @@ void ozone_draw_osk(ozone_handle_t *ozone,
 
 void ozone_draw_messagebox(
       ozone_handle_t *ozone,
+      gfx_display_t *p_disp,
       void *userdata,
       unsigned video_width,
       unsigned video_height,
@@ -561,14 +584,13 @@ void ozone_draw_messagebox(
    float scale_factor       = 0.0f;
    unsigned width           = video_width;
    unsigned height          = video_height;
-   gfx_display_t            *p_disp  = disp_get_ptr();
-   gfx_display_ctx_driver_t *dispctx = p_disp->dispctx;
+   gfx_display_ctx_driver_t 
+      *dispctx              = p_disp->dispctx;
 
    wrapped_message[0]       = '\0';
 
    /* Sanity check */
    if (string_is_empty(message) ||
-       !ozone ||
        !ozone->fonts.footer.font)
       return;
 
@@ -611,8 +633,8 @@ void ozone_draw_messagebox(
          int width = font_driver_get_message_width(
                ozone->fonts.footer.font, msg, (unsigned)strlen(msg), 1);
 
-         longest_width = (width > longest_width) ?
-               width : longest_width;
+         if (width > longest_width)
+            longest_width = width;
       }
    }
 
@@ -638,6 +660,7 @@ void ozone_draw_messagebox(
              : (16.0f * ((float)slice_new_h / 256.0f)));
 
       gfx_display_draw_texture_slice(
+            p_disp,
             userdata,
             video_width,
             video_height,
@@ -683,6 +706,8 @@ void ozone_draw_fullscreen_thumbnails(
       unsigned video_width,
       unsigned video_height)
 {
+   gfx_display_t *p_disp = disp_get_ptr();
+
    /* Check whether fullscreen thumbnails are visible */
    if (ozone->animations.fullscreen_thumbnail_alpha > 0.0f)
    {
@@ -855,6 +880,7 @@ void ozone_draw_fullscreen_thumbnails(
 
       /* Darken background */
       gfx_display_draw_quad(
+            p_disp,
             userdata,
             video_width,
             video_height,
@@ -868,6 +894,7 @@ void ozone_draw_fullscreen_thumbnails(
 
       /* Draw full-width separators */
       gfx_display_draw_quad(
+            p_disp,
             userdata,
             video_width,
             video_height,
@@ -880,6 +907,7 @@ void ozone_draw_fullscreen_thumbnails(
             separator_color);
 
       gfx_display_draw_quad(
+            p_disp,
             userdata,
             video_width,
             video_height,
@@ -898,6 +926,7 @@ void ozone_draw_fullscreen_thumbnails(
       {
          /* Background */
          gfx_display_draw_quad(
+               p_disp,
                userdata,
                video_width,
                video_height,
@@ -932,6 +961,7 @@ void ozone_draw_fullscreen_thumbnails(
       {
          /* Background */
          gfx_display_draw_quad(
+               p_disp,
                userdata,
                video_width,
                video_height,

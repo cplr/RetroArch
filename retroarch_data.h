@@ -157,25 +157,25 @@
 #endif
 
 #ifdef HAVE_THREADS
-#define VIDEO_DRIVER_GET_PTR_INTERNAL(force) ((VIDEO_DRIVER_IS_THREADED_INTERNAL() && !force) ? video_thread_get_ptr(p_rarch) : p_rarch->video_driver_data)
+#define VIDEO_DRIVER_GET_PTR_INTERNAL(p_rarch) ((VIDEO_DRIVER_IS_THREADED_INTERNAL()) ? video_thread_get_ptr(p_rarch) : p_rarch->video_driver_data)
 #else
-#define VIDEO_DRIVER_GET_PTR_INTERNAL(force) (p_rarch->video_driver_data)
+#define VIDEO_DRIVER_GET_PTR_INTERNAL(p_rarch) (p_rarch->video_driver_data)
 #endif
 
-#define VIDEO_DRIVER_GET_HW_CONTEXT_INTERNAL() (&p_rarch->hw_render)
+#define VIDEO_DRIVER_GET_HW_CONTEXT_INTERNAL(p_rarch) (&p_rarch->hw_render)
 
 #ifdef HAVE_THREADS
-#define RUNLOOP_MSG_QUEUE_LOCK() slock_lock(p_rarch->runloop_msg_queue_lock)
-#define RUNLOOP_MSG_QUEUE_UNLOCK() slock_unlock(p_rarch->runloop_msg_queue_lock)
+#define RUNLOOP_MSG_QUEUE_LOCK(p_rarch) slock_lock(p_rarch->runloop_msg_queue_lock)
+#define RUNLOOP_MSG_QUEUE_UNLOCK(p_rarch) slock_unlock(p_rarch->runloop_msg_queue_lock)
 #else
-#define RUNLOOP_MSG_QUEUE_LOCK()
-#define RUNLOOP_MSG_QUEUE_UNLOCK()
+#define RUNLOOP_MSG_QUEUE_LOCK(p_rarch)
+#define RUNLOOP_MSG_QUEUE_UNLOCK(p_rarch)
 #endif
 
 #ifdef HAVE_BSV_MOVIE
-#define BSV_MOVIE_IS_EOF() || (p_rarch->bsv_movie_state.movie_end && p_rarch->bsv_movie_state.eof_exit)
+#define BSV_MOVIE_IS_EOF(p_rarch) || (p_rarch->bsv_movie_state.movie_end && p_rarch->bsv_movie_state.eof_exit)
 #else
-#define BSV_MOVIE_IS_EOF()
+#define BSV_MOVIE_IS_EOF(p_rarch)
 #endif
 
 /* Time to exit out of the main loop?
@@ -186,22 +186,22 @@
  * d) Video driver no longer alive.
  * e) End of BSV movie and BSV EOF exit is true. (TODO/FIXME - explain better)
  */
-#define TIME_TO_EXIT(quit_key_pressed) (p_rarch->runloop_shutdown_initiated || quit_key_pressed || !is_alive BSV_MOVIE_IS_EOF() || ((p_rarch->runloop_max_frames != 0) && (frame_count >= p_rarch->runloop_max_frames)) || runloop_exec)
+#define TIME_TO_EXIT(quit_key_pressed) (p_rarch->runloop_shutdown_initiated || quit_key_pressed || !is_alive BSV_MOVIE_IS_EOF(p_rarch) || ((p_rarch->runloop_max_frames != 0) && (frame_count >= p_rarch->runloop_max_frames)) || runloop_exec)
 
 /* Depends on ASCII character values */
 #define ISPRINT(c) (((int)(c) >= ' ' && (int)(c) <= '~') ? 1 : 0)
 
 #define INPUT_CONFIG_BIND_MAP_GET(i) ((const struct input_bind_map*)&input_config_bind_map[(i)])
 
-#define VIDEO_HAS_FOCUS() (p_rarch->current_video->focus ? (p_rarch->current_video->focus(p_rarch->video_driver_data)) : true)
+#define VIDEO_HAS_FOCUS(p_rarch) (p_rarch->current_video->focus ? (p_rarch->current_video->focus(p_rarch->video_driver_data)) : true)
 
 #if HAVE_DYNAMIC
-#define RUNAHEAD_RUN_SECONDARY() \
+#define RUNAHEAD_RUN_SECONDARY(p_rarch) \
    if (!secondary_core_run_use_last_input(p_rarch)) \
       p_rarch->runahead_secondary_core_available = false
 #endif
 
-#define RUNAHEAD_RESUME_VIDEO() \
+#define RUNAHEAD_RESUME_VIDEO(p_rarch) \
    if (p_rarch->runahead_video_driver_is_active) \
       p_rarch->video_driver_active = true; \
    else \
@@ -245,7 +245,7 @@
    }
 
 #if defined(HAVE_NETWORKING) && defined(HAVE_NETWORKGAMEPAD)
-#define INPUT_REMOTE_KEY_PRESSED(key, port) (p_rarch->remote_st_ptr.buttons[(port)] & (UINT64_C(1) << (key)))
+#define INPUT_REMOTE_KEY_PRESSED(p_rarch, key, port) (p_rarch->remote_st_ptr.buttons[(port)] & (UINT64_C(1) << (key)))
 #endif
 
 /**
@@ -284,7 +284,8 @@
 
 #define MENU_LIST_GET_STACK_SIZE(list, idx) ((list)->menu_stack[(idx)]->size)
 
-#define MENU_ENTRIES_GET_SELECTION_BUF_PTR_INTERNAL(idx) ((menu_st->entries.list) ? MENU_LIST_GET_SELECTION(menu_st->entries.list, (unsigned)idx) : NULL)
+#define MENU_ENTRIES_GET_SELECTION_BUF_PTR_INTERNAL(menu_st, idx) ((menu_st->entries.list) ? MENU_LIST_GET_SELECTION(menu_st->entries.list, (unsigned)idx) : NULL)
+#define MENU_ENTRIES_NEEDS_REFRESH(menu_st) (!(menu_st->entries_nonblocking_refresh || !menu_st->entries_need_refresh))
 #endif
 
 #define CDN_URL "https://cdn.discordapp.com/avatars"
@@ -498,7 +499,7 @@ static const audio_driver_t *audio_drivers[] = {
 #ifdef HAVE_PULSE
    &audio_pulse,
 #endif
-#ifdef __PSL1GHT__
+#if defined(__PSL1GHT__) || defined(__PS3__)
    &audio_ps3,
 #endif
 #ifdef XENON
@@ -726,6 +727,9 @@ static const video_driver_t *video_drivers[] = {
 
 #ifdef HAVE_VULKAN
 static const gfx_ctx_driver_t *gfx_ctx_vk_drivers[] = {
+#if defined(__APPLE__)
+   &gfx_ctx_cocoavk,
+#endif
 #if defined(_WIN32) && !defined(__WINRT__)
    &gfx_ctx_w_vk,
 #endif
@@ -750,8 +754,11 @@ static const gfx_ctx_driver_t *gfx_ctx_gl_drivers[] = {
 #if defined(ORBIS)
    &orbis_ctx,
 #endif
-#if defined(VITA)
+#if defined(HAVE_VITAGL) | defined(HAVE_VITAGLES)
    &vita_ctx,
+#endif
+#if !defined(__PSL1GHT__) && defined(__PS3__)
+   &gfx_ctx_ps3,
 #endif
 #if defined(HAVE_LIBNX) && defined(HAVE_OPENGL)
    &switch_ctx,
@@ -788,9 +795,8 @@ static const gfx_ctx_driver_t *gfx_ctx_gl_drivers[] = {
 #if defined(HAVE_KMS)
 #if defined(HAVE_ODROIDGO2)
    &gfx_ctx_go2_drm,
-#else
-   &gfx_ctx_drm,
 #endif
+   &gfx_ctx_drm,
 #endif
 #if defined(ANDROID)
    &gfx_ctx_android,
@@ -799,10 +805,9 @@ static const gfx_ctx_driver_t *gfx_ctx_gl_drivers[] = {
    &gfx_ctx_qnx,
 #endif
 #if defined(HAVE_COCOA) || defined(HAVE_COCOATOUCH) || defined(HAVE_COCOA_METAL)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
    &gfx_ctx_cocoagl,
 #endif
-#if defined(__APPLE__) && !defined(TARGET_IPHONE_SIMULATOR) && !defined(TARGET_OS_IPHONE)
-   &gfx_ctx_cgl,
 #endif
 #if (defined(HAVE_SDL) || defined(HAVE_SDL2)) && (defined(HAVE_OPENGL) || defined(HAVE_OPENGL1) || defined(HAVE_OPENGL_CORE))
    &gfx_ctx_sdl_gl,
@@ -852,7 +857,7 @@ static input_driver_t *input_drivers[] = {
 #ifdef ORBIS
    &input_ps4,
 #endif
-#ifdef __PSL1GHT__
+#if defined(__PSL1GHT__) || defined(__PS3__)
    &input_ps3,
 #endif
 #if defined(SN_TARGET_PSP2) || defined(PSP) || defined(VITA)
@@ -954,6 +959,9 @@ static input_device_driver_t *joypad_drivers[] = {
 #endif
 #if defined(ORBIS)
    &ps4_joypad,
+#endif
+#if defined(__PSL1GHT__) || defined(__PS3__)
+   &ps3_joypad,
 #endif
 #if defined(PSP) || defined(VITA)
    &psp_joypad,
@@ -1155,7 +1163,7 @@ static const ui_companion_driver_t *ui_companion_drivers[] = {
 #if defined(_WIN32) && !defined(_XBOX) && !defined(__WINRT__)
    &ui_companion_win32,
 #endif
-#if TARGET_OS_OSX
+#if defined(OSX)
    &ui_companion_cocoa,
 #endif
    &ui_companion_null,
@@ -1316,6 +1324,14 @@ enum auto_shader_operation
    AUTO_SHADER_OP_SAVE = 0,
    AUTO_SHADER_OP_REMOVE,
    AUTO_SHADER_OP_EXISTS
+};
+
+enum input_game_focus_cmd_type
+{
+   GAME_FOCUS_CMD_OFF = 0,
+   GAME_FOCUS_CMD_ON,
+   GAME_FOCUS_CMD_TOGGLE,
+   GAME_FOCUS_CMD_REAPPLY
 };
 
 typedef struct runloop_ctx_msg_info
@@ -1548,6 +1564,12 @@ struct input_keyboard_line
    bool enabled;
 };
 
+typedef struct input_game_focus_state
+{
+   bool enabled;
+   bool core_requested;
+} input_game_focus_state_t;
+
 #ifdef HAVE_RUNAHEAD
 typedef bool(*runahead_load_state_function)(const void*, size_t);
 #endif
@@ -1566,6 +1588,8 @@ struct menu_list
    file_list_t **selection_buf;
    size_t selection_buf_size;
 };
+
+typedef struct menu_list menu_list_t;
 
 struct menu_state
 {
@@ -1594,6 +1618,11 @@ struct menu_state
    /* Storage container for current menu datetime
     * representation string */
    char datetime_cache[255];
+
+   /* When generating a menu list in menu_displaylist_build_list(),
+    * the entry with a label matching 'pending_selection' will
+    * be selected automatically */
+   char pending_selection[PATH_MAX_LENGTH];
 
    /* when enabled, on next iteration the 'Quick Menu' list will
     * be pushed onto the stack */
@@ -1856,7 +1885,6 @@ struct rarch_state
 #ifdef HAVE_NETWORKGAMEPAD
    input_remote_t *input_driver_remote;
 #endif
-   input_mapper_t *input_driver_mapper;
    input_driver_t *current_input;
    void *current_input_data;
 
@@ -2052,7 +2080,7 @@ struct rarch_state
    unsigned perf_ptr_rarch;
    unsigned perf_ptr_libretro;
 
-   float audio_driver_input_data[AUDIO_CHUNK_SIZE_NONBLOCKING * 2];
+   float *audio_driver_input_data;
    float video_driver_core_hz;
    float video_driver_aspect_ratio;
 
@@ -2108,6 +2136,7 @@ struct rarch_state
 #endif
 #endif
    retro_bits_t has_set_libretro_device;        /* uint32_t alignment */
+   input_mapper_t input_driver_mapper;          /* uint32_t alignment */
 
 
 #ifdef HAVE_BSV_MOVIE
@@ -2254,6 +2283,7 @@ struct rarch_state
    bool runloop_remaps_content_dir_active;
 #endif
    bool runloop_game_options_active;
+   bool runloop_folder_options_active;
    bool runloop_autosave;
 #ifdef HAVE_SCREENSHOTS
    bool runloop_max_frames_screenshot;
@@ -2307,6 +2337,8 @@ struct rarch_state
    bool input_driver_nonblock_state;
    bool input_driver_grab_mouse_state;
 
+   input_game_focus_state_t game_focus_state; /* bool alignment */
+
 #ifdef HAVE_MENU
    bool menu_input_dialog_keyboard_display;
    /* Is the menu driver still running? */
@@ -2325,6 +2357,7 @@ struct rarch_state
 
    bool main_ui_companion_is_on_foreground;
    bool keyboard_mapping_blocked;
+   retro_bits_512_t keyboard_mapping_bits;
 
 #if defined(HAVE_CG) || defined(HAVE_GLSL) || defined(HAVE_SLANG) || defined(HAVE_HLSL)
    bool shader_presets_need_reload;
@@ -2669,6 +2702,8 @@ static bool command_show_osd_msg(const char* arg);
 static bool command_read_ram(const char *arg);
 static bool command_write_ram(const char *arg);
 #endif
+static bool command_read_memory(const char *arg);
+static bool command_write_memory(const char *arg);
 
 static const struct cmd_action_map action_map[] = {
 #if defined(HAVE_CG) || defined(HAVE_GLSL) || defined(HAVE_SLANG) || defined(HAVE_HLSL)
@@ -2679,9 +2714,13 @@ static const struct cmd_action_map action_map[] = {
    { "GET_CONFIG_PARAM", command_get_config_param, "<param name>" },
    { "SHOW_MSG",         command_show_osd_msg,     "No argument" },
 #if defined(HAVE_CHEEVOS)
-   { "READ_CORE_RAM",   command_read_ram,    "<address> <number of bytes>" },
-   { "WRITE_CORE_RAM",  command_write_ram,   "<address> <byte1> <byte2> ..." },
+   /* These functions use achievement addresses and only work if a game with achievements is
+    * loaded. READ_CORE_MEMORY and WRITE_CORE_MEMORY are preferred and use system addresses. */
+   { "READ_CORE_RAM",    command_read_ram,         "<address> <number of bytes>" },
+   { "WRITE_CORE_RAM",   command_write_ram,        "<address> <byte1> <byte2> ..." },
 #endif
+   { "READ_CORE_MEMORY", command_read_memory,      "<address> <number of bytes>" },
+   { "WRITE_CORE_MEMORY",command_write_memory,     "<address> <byte1> <byte2> ..." },
 };
 
 static const struct cmd_map map[] = {
@@ -2737,8 +2776,6 @@ static const struct cmd_map map[] = {
 #endif
 
 #ifdef HAVE_MENU
-static int null_menu_iterate(void *data, void *userdata,
-      enum menu_action action) { return 1; }
 static void *null_menu_init(void **userdata, bool video_is_threaded)
 {
    menu_handle_t *menu = (menu_handle_t*)calloc(1, sizeof(*menu));
@@ -2746,11 +2783,12 @@ static void *null_menu_init(void **userdata, bool video_is_threaded)
       return NULL;
    return menu;
 }
+static int null_menu_list_bind_init(menu_file_list_cbs_t *cbs,
+      const char *path, const char *label, unsigned type, size_t idx) { return 0; }
 
 static menu_ctx_driver_t menu_ctx_null = {
   NULL,  /* set_texture */
   NULL,  /* render_messagebox */
-  null_menu_iterate,
   NULL,  /* render */
   NULL,  /* frame */
   null_menu_init,
@@ -2777,7 +2815,7 @@ static menu_ctx_driver_t menu_ctx_null = {
   NULL,  /* list_get_size */
   NULL,  /* list_get_entry */
   NULL,  /* list_set_selection */
-  NULL,  /* bind_init */
+  null_menu_list_bind_init,
   NULL,  /* load_image */
   "null",
   NULL,  /* environ */

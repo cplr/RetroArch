@@ -72,8 +72,6 @@ enum menu_entry_type
 };
 
 
-typedef struct menu_list menu_list_t;
-
 typedef struct menu_ctx_list
 {
    const char  *path;
@@ -108,12 +106,8 @@ typedef struct menu_file_list_cbs
    int (*action_start)(const char *path, const char *label, unsigned type,
          size_t idx, size_t entry_idx);
    int (*action_info)(unsigned type,  const char *label);
-   int (*action_content_list_switch)(void *data, void *userdata, const char
-         *path, const char *label, unsigned type);
    int (*action_left)(unsigned type, const char *label, bool wraparound);
    int (*action_right)(unsigned type, const char *label, bool wraparound);
-   int (*action_refresh)(file_list_t *list, file_list_t *menu_list);
-   int (*action_up)(unsigned type, const char *label);
    int (*action_label)(file_list_t *list,
          unsigned type, unsigned i,
          const char *label, const char *path,
@@ -122,7 +116,6 @@ typedef struct menu_file_list_cbs
          unsigned type, unsigned i,
          const char *label, const char *path,
          char *s, size_t len);
-   int (*action_down)(unsigned type, const char *label);
    void (*action_get_value)(file_list_t* list,
          unsigned *w, unsigned type, unsigned i,
          const char *label, char *s, size_t len,
@@ -179,10 +172,6 @@ size_t menu_entries_get_stack_size(size_t idx);
 
 size_t menu_entries_get_size(void);
 
-void menu_entries_get_at_offset(const file_list_t *list, size_t idx,
-      const char **path, const char **label, unsigned *file_type,
-      size_t *entry_idx, const char **alt);
-
 void menu_entries_prepend(file_list_t *list,
       const char *path, const char *label,
       enum msg_hash_enums enum_idx,
@@ -194,9 +183,6 @@ bool menu_entries_append_enum(file_list_t *list,
       unsigned type, size_t directory_ptr, size_t entry_idx);
 
 bool menu_entries_ctl(enum menu_entries_ctl_state state, void *data);
-
-void menu_entries_set_checked(file_list_t *list, size_t entry_idx,
-      bool checked);
 
 /* Menu entry interface -
  *

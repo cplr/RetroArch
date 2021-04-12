@@ -191,15 +191,28 @@ task_finished:
             free(tmp);
 
          if (task_get_cancelled(task))
+         {
             task_set_error(task, strdup("Task cancelled."));
-         else if (!task->mute)
-            task_set_error(task, strdup("Download failed."));
+         }
+         else
+         {
+            data = (http_transfer_data_t*)malloc(sizeof(*data));
+            data->data   = NULL;
+            data->len    = 0;
+            data->status = net_http_status(http->handle);
+
+            task_set_data(task, data);
+
+            if (!task->mute)
+               task_set_error(task, strdup("Download failed."));
+         }
       }
       else
       {
-         data       = (http_transfer_data_t*)malloc(sizeof(*data));
-         data->data = tmp;
-         data->len  = len;
+         data = (http_transfer_data_t*)malloc(sizeof(*data));
+         data->data   = tmp;
+         data->len    = len;
+         data->status = net_http_status(http->handle);
 
          task_set_data(task, data);
       }
@@ -209,6 +222,17 @@ task_finished:
       task_set_error(task, strdup("Internal error."));
 
    free(http);
+}
+
+static void task_http_transfer_cleanup(retro_task_t *task)
+{
+   http_transfer_data_t* data = (http_transfer_data_t*)task_get_data(task);
+   if (data)
+   {
+      if (data->data)
+         free(data->data);
+      free(data);
+   }
 }
 
 static bool task_http_finder(retro_task_t *task, void *user_data)
@@ -305,6 +329,7 @@ static void* task_push_http_transfer_generic(
    t->mute                 = mute;
    t->callback             = cb;
    t->progress_cb          = http_transfer_progress_cb;
+   t->cleanup              = task_http_transfer_cleanup;
    t->user_data            = user_data;
    t->progress             = -1;
 

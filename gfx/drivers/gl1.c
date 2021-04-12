@@ -283,7 +283,6 @@ static void *gl1_gfx_init(const video_info_t *video,
    {
       vglInitExtended(0x1400000, full_x, full_y, RAM_THRESHOLD, SCE_GXM_MULTISAMPLE_4X);
       vglUseVram(GL_TRUE);
-      vglStartRendering();
       vgl_inited = true;
    }
 #endif
@@ -975,7 +974,7 @@ static void gl1_gfx_set_nonblock_state(void *data, bool state,
    if (!gl1)
       return;
 
-   RARCH_LOG("[GL1]: VSync => %s\n", state ? "off" : "on");
+   RARCH_LOG("[GL1]: VSync => %s\n", state ? "OFF" : "ON");
 
    gl1_context_bind_hw_render(gl1, false);
 
@@ -1478,6 +1477,17 @@ static void gl1_gfx_set_viewport_wrapper(void *data, unsigned viewport_width,
 }
 
 #ifdef HAVE_OVERLAY
+static unsigned gl1_get_alignment(unsigned pitch)
+{
+   if (pitch & 1)
+      return 1;
+   if (pitch & 2)
+      return 2;
+   if (pitch & 4)
+      return 4;
+   return 8;
+}
+
 static bool gl1_overlay_load(void *data,
       const void *image_data, unsigned num_images)
 {
@@ -1518,7 +1528,7 @@ static bool gl1_overlay_load(void *data,
 
    for (i = 0; i < num_images; i++)
    {
-      unsigned alignment = video_pixel_get_alignment(images[i].width
+      unsigned alignment = gl1_get_alignment(images[i].width
             * sizeof(uint32_t));
 
       gl1_load_texture_data(gl->overlay_tex[i],
