@@ -37,9 +37,15 @@
 #include "gfx/common/ctr_common.h"
 #endif
 
-/* Required for OpenDingux IPU filter setting */
+/* Required for OpenDingux IPU filter + refresh
+ * rate settings */
 #if defined(DINGUX)
 #include "dingux/dingux_utils.h"
+#endif
+
+/* Required for menu screensaver animation */
+#if defined(HAVE_MATERIALUI) || defined(HAVE_XMB) || defined(HAVE_OZONE)
+#include "menu/menu_screensaver.h"
 #endif
 
 #if defined(HW_RVL)
@@ -61,6 +67,8 @@
 #if defined(GEKKO)
 #define DEFAULT_MOUSE_SCALE 1
 #endif
+
+#define DEFAULT_TOUCH_SCALE 1
 
 #if defined(RARCH_MOBILE) || defined(HAVE_LIBNX) || defined(__WINRT__)
 #define DEFAULT_POINTER_ENABLE true
@@ -217,6 +225,9 @@
 #define DEFAULT_FULLSCREEN_Y 0
 #endif
 
+/* Force 4k resolution */
+#define DEFAULT_FORCE_RESOLUTION false
+
 /* Number of threads to use for video recording */
 #define DEFAULT_VIDEO_RECORD_THREADS 2
 
@@ -234,6 +245,15 @@
 #define DEFAULT_LOAD_DUMMY_ON_CORE_SHUTDOWN true
 #endif
 #define DEFAULT_CHECK_FIRMWARE_BEFORE_LOADING false
+
+/* Specifies whether to cache core info
+ * into a single (compressed) file for improved
+ * load times on platforms with slow IO */
+#if defined(RARCH_CONSOLE)
+#define DEFAULT_CORE_INFO_CACHE_ENABLE true
+#else
+#define DEFAULT_CORE_INFO_CACHE_ENABLE false
+#endif
 
 /* Specifies whether to 'reload' (fork and quit)
  * RetroArch when launching content with the
@@ -381,6 +401,11 @@
 /* Sets image filtering method when using the
  * IPU hardware scaler in Dingux devices */
 #define DEFAULT_DINGUX_IPU_FILTER_TYPE DINGUX_IPU_FILTER_BICUBIC
+#if defined(DINGUX_BETA)
+/* Sets refresh rate of integral LCD panel
+ * in Dingux devices */
+#define DEFAULT_DINGUX_REFRESH_RATE DINGUX_REFRESH_RATE_60HZ
+#endif
 #endif
 
 /* Save configuration file on exit. */
@@ -574,6 +599,19 @@ static const bool menu_savestate_resume     = false;
 
 #define DEFAULT_QUIT_ON_CLOSE_CONTENT QUIT_ON_CLOSE_CONTENT_DISABLED
 
+/* While the menu is active, supported drivers
+ * will display a screensaver after SCREENSAVER_TIMEOUT
+ * seconds of inactivity. A timeout of zero disables
+ * the screensaver */
+#define DEFAULT_MENU_SCREENSAVER_TIMEOUT 0
+
+#if defined(HAVE_MATERIALUI) || defined(HAVE_XMB) || defined(HAVE_OZONE)
+/* When menu screensaver is enabled, specifies
+ * animation effect and animation speed */
+#define DEFAULT_MENU_SCREENSAVER_ANIMATION MENU_SCREENSAVER_BLANK
+#define DEFAULT_MENU_SCREENSAVER_ANIMATION_SPEED 1.0f
+#endif
+
 static const bool content_show_settings     = true;
 static const bool content_show_favorites    = true;
 #ifdef HAVE_IMAGEVIEWER
@@ -643,6 +681,7 @@ static const float menu_header_opacity = 1.000;
 #define DEFAULT_SHOW_ADVANCED_SETTINGS false
 
 #define DEFAULT_RGUI_COLOR_THEME RGUI_THEME_CLASSIC_GREEN
+#define DEFAULT_RGUI_TRANSPARENCY true
 
 static const bool rgui_inline_thumbnails = false;
 static const bool rgui_swap_thumbnails = false;
@@ -655,6 +694,7 @@ static const unsigned rgui_aspect_lock = RGUI_ASPECT_RATIO_LOCK_NONE;
 static const bool rgui_shadows = false;
 static const unsigned rgui_particle_effect = RGUI_PARTICLE_EFFECT_NONE;
 #define DEFAULT_RGUI_PARTICLE_EFFECT_SPEED 1.0f
+#define DEFAULT_RGUI_PARTICLE_EFFECT_SCREENSAVER true
 static const bool rgui_extended_ascii = false;
 #define DEFAULT_RGUI_SWITCH_ICONS true
 #endif
@@ -838,6 +878,10 @@ static const bool audio_enable_menu_bgm    = false;
  * applied */
 #define DEFAULT_NOTIFICATION_SHOW_CHEATS_APPLIED true
 
+/* Display a notification when applying an
+ * IPS/BPS/UPS patch file */
+#define DEFAULT_NOTIFICATION_SHOW_PATCH_APPLIED true
+
 /* Display a notification when loading an
  * input remap file */
 #define DEFAULT_NOTIFICATION_SHOW_REMAP_LOAD true
@@ -866,8 +910,15 @@ static const bool audio_enable_menu_bgm    = false;
 #define DEFAULT_NOTIFICATION_SHOW_SCREENSHOT_FLASH 0
 #endif
 
-/*Display a notification when setting the refresh rate*/
+/* Display a notification when setting the refresh rate*/
+#if defined(_3DS) || (defined(DINGUX) && defined(DINGUX_BETA))
+/* 3DS and OpenDingux Beta devices set refresh rate
+ * on gfx driver init - set default notification
+ * state to 'false' in order to avoid OSD log spam */
+#define DEFAULT_NOTIFICATION_SHOW_REFRESH_RATE false
+#else
 #define DEFAULT_NOTIFICATION_SHOW_REFRESH_RATE true
+#endif
 
 /* Output samplerate. */
 #ifdef GEKKO
@@ -975,7 +1026,7 @@ static const bool audio_enable_menu_bgm    = false;
 
 /* Saves non-volatile SRAM at a regular interval.
  * It is measured in seconds. A value of 0 disables autosave. */
-#if defined(__i386__) || defined(__i486__) || defined(__i686__) || defined(__x86_64__) || defined(_M_X64) || defined(_WIN32) || defined(OSX) || defined(ANDROID) || defined(IOS)
+#if defined(__i386__) || defined(__i486__) || defined(__i686__) || defined(__x86_64__) || defined(_M_X64) || defined(_WIN32) || defined(OSX) || defined(ANDROID) || defined(IOS) || defined(DINGUX)
 /* Flush to file every 10 seconds on modern platforms by default */
 #define DEFAULT_AUTOSAVE_INTERVAL 10
 #else

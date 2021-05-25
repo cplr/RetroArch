@@ -41,6 +41,7 @@
 
 #include "../menu_driver.h"
 #include "../menu_entries.h"
+#include "../menu_screensaver.h"
 
 #include "../../gfx/gfx_animation.h"
 #include "../../gfx/gfx_thumbnail_path.h"
@@ -86,6 +87,12 @@
  *   any timing fluctuations, resulting in
  *   smooth motion */
 #define XMB_TAB_SWITCH_REPEAT_DELAY 99000
+
+/* XMB does not have a clean colour theme
+ * implementation. Until this is available,
+ * the menu screensaver tint will be set to
+ * a fixed colour: HTML WhiteSmoke */
+#define XMB_SCREENSAVER_TINT 0xF5F5F5
 
 #if 0
 #define XMB_DEBUG
@@ -295,6 +302,8 @@ typedef struct xmb_handle
    video_font_raster_block_t raster_block;
    video_font_raster_block_t raster_block2;
 
+   menu_screensaver_t *screensaver;
+
    gfx_thumbnail_path_data_t *thumbnail_path_data;
    struct {
       gfx_thumbnail_t right;
@@ -370,7 +379,8 @@ typedef struct xmb_handle
 
    bool fullscreen_thumbnails_available;
    bool show_fullscreen_thumbnails;
-   bool mouse_show;
+   bool show_mouse;
+   bool show_screensaver;
    bool use_ps3_layout;
    bool last_use_ps3_layout;
    bool assets_missing;
@@ -1890,7 +1900,7 @@ static void xmb_set_title(xmb_handle_t *xmb)
             xmb->title_name, path, sizeof(xmb->title_name));
 
       /* Add current search terms */
-      menu_driver_search_append_terms_string(
+      menu_entries_search_append_terms_string(
             xmb->title_name, sizeof(xmb->title_name));
    }
 }
@@ -2286,13 +2296,19 @@ static int xmb_environ(enum menu_environ_cb type, void *data, void *userdata)
    switch (type)
    {
       case MENU_ENVIRON_ENABLE_MOUSE_CURSOR:
-         xmb->mouse_show = true;
+         xmb->show_mouse = true;
          break;
       case MENU_ENVIRON_DISABLE_MOUSE_CURSOR:
-         xmb->mouse_show = false;
+         xmb->show_mouse = false;
          break;
       case MENU_ENVIRON_RESET_HORIZONTAL_LIST:
          xmb_refresh_horizontal_list(xmb);
+         break;
+      case MENU_ENVIRON_ENABLE_SCREENSAVER:
+         xmb->show_screensaver = true;
+         break;
+      case MENU_ENVIRON_DISABLE_SCREENSAVER:
+         xmb->show_screensaver = false;
          break;
       default:
          return -1;
@@ -3896,6 +3912,21 @@ static void xmb_render(void *data,
    /* Read pointer state */
    menu_input_get_pointer_state(&xmb->pointer);
 
+   /* If menu screensaver is active, update
+    * screensaver and return */
+   if (xmb->show_screensaver)
+   {
+      menu_screensaver_iterate(
+            xmb->screensaver,
+            p_disp, p_anim,
+            (enum menu_screensaver_effect)settings->uints.menu_screensaver_animation,
+            settings->floats.menu_screensaver_animation_speed,
+            XMB_SCREENSAVER_TINT,
+            width, height,
+            settings->paths.directory_assets);
+      GFX_ANIMATION_CLEAR_ACTIVE(p_anim);
+      return;
+   }
 
    if (xmb->pointer.type != MENU_POINTER_DISABLED)
    {
@@ -4079,7 +4110,6 @@ static void xmb_draw_bg(
 
    if (dispctx && dispctx->blend_begin)
       dispctx->blend_begin(userdata);
-   video_driver_set_viewport(video_width, video_height, true, false);
 
 #ifdef HAVE_SHADERPIPELINE
    if (menu_shader_pipeline > XMB_SHADER_PIPELINE_WALLPAPER
@@ -4130,7 +4160,8 @@ static void xmb_draw_bg(
       }
 
       if (dispctx && dispctx->draw_pipeline)
-         dispctx->draw_pipeline(&draw, userdata, video_width, video_height);
+         dispctx->draw_pipeline(&draw, p_disp,
+               userdata, video_width, video_height);
    }
    else
 #endif
@@ -4688,7 +4719,7 @@ static void xmb_frame(void *data, video_frame_info_t *video_info)
    bool libretro_running                   = video_info->libretro_running;
    unsigned menu_shader_pipeline           = video_info->menu_shader_pipeline;
    float menu_wallpaper_opacity            = video_info->menu_wallpaper_opacity;
-   gfx_display_t            *p_disp        = disp_get_ptr();
+   gfx_display_t            *p_disp        = (gfx_display_t*)video_info->disp_userdata;
    gfx_animation_t          *p_anim        = anim_get_ptr();
    gfx_display_ctx_driver_t *dispctx       = p_disp->dispctx;
    bool input_dialog_display_kb            = menu_input_dialog_get_display_kb();
@@ -4699,6 +4730,17 @@ static void xmb_frame(void *data, video_frame_info_t *video_info)
    msg[0]             = '\0';
    title_msg[0]       = '\0';
    title_truncated[0] = '\0';
+
+   /* If menu screensaver is active, draw
+    * screensaver and return */
+   if (xmb->show_screensaver)
+   {
+      menu_screensaver_frame(xmb->screensaver,
+            video_info, p_disp);
+      return;
+   }
+
+   video_driver_set_viewport(video_width, video_height, true, false);
 
    pseudo_font_length                      = xmb->icon_spacing_horizontal * 4 - xmb->icon_size / 4.0f;
    left_thumbnail_margin_width             = xmb->icon_size * 3.4f;
@@ -5328,7 +5370,7 @@ static void xmb_frame(void *data, video_frame_info_t *video_info)
    }
 
    /* Cursor image */
-   if (xmb->mouse_show)
+   if (xmb->show_mouse)
    {
       bool cursor_visible = (video_fullscreen || mouse_grabbed) &&
             menu_mouse_enable;
@@ -5701,6 +5743,11 @@ static void *xmb_init(void **userdata, bool video_is_threaded)
 
    xmb_init_ribbon(xmb);
 
+   /* Initialise screensaver */
+   xmb->screensaver = menu_screensaver_init();
+   if (!xmb->screensaver)
+      goto error;
+
    /* Thumbnail initialisation */
    xmb->thumbnail_path_data = gfx_thumbnail_path_init();
    if (!xmb->thumbnail_path_data)
@@ -5733,14 +5780,12 @@ error:
    xmb_free_list_nodes(&xmb->horizontal_list, false);
    file_list_deinitialize(&xmb->selection_buf_old);
    file_list_deinitialize(&xmb->horizontal_list);
-   p_anim->updatetime_cb    = NULL;
    return NULL;
 }
 
 static void xmb_free(void *data)
 {
    xmb_handle_t       *xmb = (xmb_handle_t*)data;
-   gfx_animation_t *p_anim = anim_get_ptr();
 
    if (xmb)
    {
@@ -5759,14 +5804,14 @@ static void xmb_free(void *data)
 
       if (xmb->thumbnail_path_data)
          free(xmb->thumbnail_path_data);
+
+      menu_screensaver_free(xmb->screensaver);
    }
 
    if (gfx_display_white_texture)
       video_driver_texture_unload(&gfx_display_white_texture);
 
    font_driver_bind_block(NULL, NULL);
-
-   p_anim->updatetime_cb    = NULL;
 }
 
 static void xmb_context_bg_destroy(xmb_handle_t *xmb)
@@ -6279,6 +6324,8 @@ static void xmb_context_reset_internal(xmb_handle_t *xmb,
 
    xmb_context_reset_horizontal_list(xmb);
 
+   menu_screensaver_context_destroy(xmb->screensaver);
+
    /* Only reload thumbnails if:
     * > Thumbnails are enabled
     * > This is a playlist, a database list, a file list
@@ -6626,6 +6673,8 @@ static void xmb_context_destroy(void *data)
 
    xmb->font = NULL;
    xmb->font2 = NULL;
+
+   menu_screensaver_context_destroy(xmb->screensaver);
 }
 
 static void xmb_toggle(void *userdata, bool menu_on)
@@ -6751,7 +6800,7 @@ static int xmb_list_push(void *data, void *userdata,
                MENU_SETTING_ACTION_FAVORITES_DIR, 0, 0);
 
          core_info_get_list(&list);
-         if (core_info_list_num_info_files(list))
+         if (list->info_count > 0)
             menu_entries_append_enum(info->list,
                   msg_hash_to_str(MENU_ENUM_LABEL_VALUE_DOWNLOADED_FILE_DETECT_CORE_LIST),
                   msg_hash_to_str(MENU_ENUM_LABEL_DOWNLOADED_FILE_DETECT_CORE_LIST),

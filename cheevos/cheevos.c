@@ -491,6 +491,12 @@ static void rcheevos_invalidate_address(unsigned address)
 
 uint8_t* rcheevos_patch_address(unsigned address)
 {
+   if (rcheevos_locals.memory.count == 0)
+   {
+      /* memory map was not previously initialized (no achievements for this game?) try now */
+      rcheevos_memory_init(&rcheevos_locals.memory, rcheevos_locals.patchdata.console_id);
+   }
+
    return rcheevos_memory_find(&rcheevos_locals.memory, address);
 }
 
@@ -1009,13 +1015,17 @@ static void rcheevos_award_achievement(rcheevos_locals_t *locals,
       /* Take a screenshot of the achievement. */
       if (settings && settings->bools.cheevos_auto_screenshot)
       {
-         char shotname[8192];
+         size_t shotname_len  = sizeof(char) * 8192;
+         char *shotname       = (char*)malloc(shotname_len);
 
-         snprintf(shotname, sizeof(shotname), "%s/%s-cheevo-%u",
+         if (!shotname)
+            return;
+
+         snprintf(shotname, shotname_len, "%s/%s-cheevo-%u",
                settings->paths.directory_screenshot,
                path_basename(path_get(RARCH_PATH_BASENAME)),
                cheevo->id);
-         shotname[sizeof(shotname) - 1] = '\0';
+         shotname[shotname_len - 1] = '\0';
 
          if (take_screenshot(settings->paths.directory_screenshot,
                   shotname, true,
@@ -1028,6 +1038,7 @@ static void rcheevos_award_achievement(rcheevos_locals_t *locals,
             CHEEVOS_LOG(
                   RCHEEVOS_TAG "Failed to capture screenshot for achievement %u\n",
                   cheevo->id);
+         free(shotname);
       }
    }
 #endif
@@ -1471,10 +1482,12 @@ bool rcheevos_unload(void)
 #endif
    }
 
+   if (rcheevos_locals.memory.count > 0)
+      rcheevos_memory_destroy(&rcheevos_locals.memory);
+
    if (rcheevos_locals.loaded)
    {
       rcheevos_free_patchdata(&rcheevos_locals.patchdata);
-      rcheevos_memory_destroy(&rcheevos_locals.memory);
 #ifdef HAVE_MENU
       cheevos_reset_menu_badges();
 #endif

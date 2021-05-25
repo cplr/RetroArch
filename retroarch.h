@@ -123,15 +123,12 @@ enum rarch_ctl_state
 
    RARCH_CTL_IS_REMAPS_CORE_ACTIVE,
    RARCH_CTL_SET_REMAPS_CORE_ACTIVE,
-   RARCH_CTL_UNSET_REMAPS_CORE_ACTIVE,
 
    RARCH_CTL_IS_REMAPS_CONTENT_DIR_ACTIVE,
    RARCH_CTL_SET_REMAPS_CONTENT_DIR_ACTIVE,
-   RARCH_CTL_UNSET_REMAPS_CONTENT_DIR_ACTIVE,
 
    RARCH_CTL_IS_REMAPS_GAME_ACTIVE,
    RARCH_CTL_SET_REMAPS_GAME_ACTIVE,
-   RARCH_CTL_UNSET_REMAPS_GAME_ACTIVE,
 #endif
 
    RARCH_CTL_IS_MISSING_BIOS,
@@ -288,6 +285,8 @@ typedef struct global
       bool softfilter_enable;
 
    } console;
+   unsigned old_analog_dpad_mode[MAX_USERS];
+   unsigned old_libretro_device[MAX_USERS];
    /* Settings and/or global states specific to menus */
 #ifdef HAVE_MENU
    enum menu_action menu_prev_action;
@@ -1116,6 +1115,7 @@ typedef struct video_frame_info
 {
    void *userdata;
    void *widgets_userdata;
+   void *disp_userdata;
 
    int custom_vp_x;
    int custom_vp_y;
@@ -1140,6 +1140,8 @@ typedef struct video_frame_info
    unsigned custom_vp_full_width;
    unsigned custom_vp_full_height;
    unsigned black_frame_insertion;
+   unsigned fps_update_interval;
+   unsigned memory_update_interval;
 
    float menu_wallpaper_opacity;
    float menu_framebuffer_opacity;
@@ -1200,6 +1202,7 @@ typedef struct video_frame_info
    bool runloop_is_slowmotion;
    bool runloop_is_paused;
    bool menu_is_alive;
+   bool menu_screensaver_active;
    bool msg_bgcolor_enable;
 } video_frame_info_t;
 
@@ -1864,6 +1867,7 @@ extern const gfx_ctx_driver_t gfx_ctx_videocore;
 extern const gfx_ctx_driver_t gfx_ctx_qnx;
 extern const gfx_ctx_driver_t gfx_ctx_cgl;
 extern const gfx_ctx_driver_t gfx_ctx_cocoagl;
+extern const gfx_ctx_driver_t gfx_ctx_cocoavk;
 extern const gfx_ctx_driver_t gfx_ctx_emscripten;
 extern const gfx_ctx_driver_t gfx_ctx_opendingux_fbdev;
 extern const gfx_ctx_driver_t gfx_ctx_khr_display;

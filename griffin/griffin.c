@@ -1195,6 +1195,7 @@ GIT
 RETROARCH
 ============================================================ */
 #include "../retroarch.c"
+#include "../command.c"
 #include "../libretro-common/queues/task_queue.c"
 
 #include "../msg_hash.c"
@@ -1291,14 +1292,9 @@ THREAD
 NETPLAY
 ============================================================ */
 #ifdef HAVE_NETWORKING
-#include "../network/netplay/netplay_delta.c"
 #include "../network/netplay/netplay_handshake.c"
-#include "../network/netplay/netplay_init.c"
 #include "../network/netplay/netplay_io.c"
-#include "../network/netplay/netplay_keyboard.c"
-#include "../network/netplay/netplay_sync.c"
 #include "../network/netplay/netplay_discovery.c"
-#include "../network/netplay/netplay_buf.c"
 #include "../network/netplay/netplay_room_parse.c"
 #include "../libretro-common/net/net_compat.c"
 #include "../libretro-common/net/net_socket.c"
@@ -1374,6 +1370,9 @@ MENU
 
 #ifdef HAVE_MENU
 #include "../menu/menu_setting.c"
+#if defined(HAVE_MATERIALUI) || defined(HAVE_XMB) || defined(HAVE_OZONE)
+#include "../menu/menu_screensaver.c"
+#endif
 
 #include "../menu/cbs/menu_cbs_ok.c"
 #include "../menu/cbs/menu_cbs_cancel.c"
@@ -1492,20 +1491,23 @@ DEPENDENCIES
 #endif
 
 #ifdef HAVE_7ZIP
-#include "../deps/7zip/7zIn.c"
+#include "../deps/7zip/7zArcIn.c"
+#include "../deps/7zip/7zBuf.c"
+#include "../deps/7zip/7zCrc.c"
+#include "../deps/7zip/7zCrcOpt.c"
+#include "../deps/7zip/7zDec.c"
+#include "../deps/7zip/CpuArch.c"
+#include "../deps/7zip/Delta.c"
+#include "../deps/7zip/LzFind.c"
+#include "../deps/7zip/LzmaDec.c"
+#include "../deps/7zip/Lzma2Dec.c"
+#include "../deps/7zip/LzmaEnc.c"
+#include "../deps/7zip/Bra.c"
 #include "../deps/7zip/Bra86.c"
+#include "../deps/7zip/BraIA64.c"
+#include "../deps/7zip/Bcj2.c"
 #include "../deps/7zip/7zFile.c"
 #include "../deps/7zip/7zStream.c"
-#include "../deps/7zip/LzmaDec.c"
-#include "../deps/7zip/LzmaEnc.c"
-#include "../deps/7zip/7zCrcOpt.c"
-#include "../deps/7zip/Bra.c"
-#include "../deps/7zip/7zDec.c"
-#include "../deps/7zip/Bcj2.c"
-#include "../deps/7zip/7zCrc.c"
-#include "../deps/7zip/Lzma2Dec.c"
-#include "../deps/7zip/LzFind.c"
-#include "../deps/7zip/7zBuf.c"
 #endif
 
 #ifdef WANT_LIBFAT

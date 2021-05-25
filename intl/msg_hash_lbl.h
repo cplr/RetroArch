@@ -195,6 +195,10 @@ MSG_HASH(
    MENU_ENUM_LABEL_BLUETOOTH_ENABLE,
    "bluetooth_enable"
    )
+MSG_HASH(
+   MENU_ENUM_LABEL_TIMEZONE,
+   "timezone"
+   )
 #endif
 MSG_HASH(
    MENU_ENUM_LABEL_BUILDBOT_ASSETS_URL,
@@ -893,6 +897,14 @@ MSG_HASH(
    "deferred_power_management_settings_list"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_CPU_PERFPOWER_LIST,
+   "deferred_cpu_perfpower_list"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_DEFERRED_CPU_POLICY_ENTRY,
+   "deferred_cpu_policy_list"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_DEFERRED_LAKKA_LIST,
    "deferred_lakka_list"
    )
@@ -1161,6 +1173,10 @@ MSG_HASH(
    "check_for_missing_firmware"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_CORE_INFO_CACHE_ENABLE,
+   "core_info_cache_enable"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_DUMMY_ON_CORE_SHUTDOWN,
    "dummy_on_core_shutdown"
    )
@@ -1414,6 +1430,10 @@ MSG_HASH(
    "input_mouse_scale"
    )
 #endif
+MSG_HASH(
+   MENU_ENUM_LABEL_INPUT_TOUCH_SCALE,
+   "input_touch_scale"
+   )
 MSG_HASH(
    MENU_ENUM_LABEL_INPUT_BIND_MODE,
    "input_bind_mode"
@@ -2165,6 +2185,18 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_PAUSE_NONACTIVE,
    "pause_nonactive"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_MENU_SCREENSAVER_TIMEOUT,
+   "menu_screensaver_timeout"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_MENU_SCREENSAVER_ANIMATION,
+   "menu_screensaver_animation"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_MENU_SCREENSAVER_ANIMATION_SPEED,
+   "menu_screensaver_animation_speed"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_PERFCNT_ENABLE,
@@ -3131,6 +3163,12 @@ MSG_HASH(
    MENU_ENUM_LABEL_VIDEO_DINGUX_IPU_FILTER_TYPE,
    "video_dingux_ipu_filter_type"
    )
+#if defined(DINGUX_BETA)
+MSG_HASH(
+   MENU_ENUM_LABEL_VIDEO_DINGUX_REFRESH_RATE,
+   "video_dingux_refresh_rate"
+   )
+#endif
 #endif
 MSG_HASH(
    MENU_ENUM_LABEL_VIDEO_BLACK_FRAME_INSERTION,
@@ -3464,6 +3502,10 @@ MSG_HASH(
    MENU_ENUM_LABEL_VIDEO_FULLSCREEN_Y,
    "video_fullscreen_y"
    )
+MSG_HASH(
+   MENU_ENUM_LABEL_VIDEO_FORCE_RESOLUTION,
+   "video_force_resolution"
+)
 MSG_HASH(
    MENU_ENUM_LABEL_VIDEO_LAYOUT_ENABLE,
    "video_layout_enable"
@@ -4131,6 +4173,10 @@ MSG_HASH(
    "menu_rgui_full_width_layout"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_MENU_RGUI_TRANSPARENCY,
+   "menu_rgui_transparency"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_MENU_RGUI_SHADOWS,
    "menu_rgui_shadows"
    )
@@ -4141,6 +4187,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_MENU_RGUI_PARTICLE_EFFECT_SPEED,
    "rgui_particle_effect_speed"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_MENU_RGUI_PARTICLE_EFFECT_SCREENSAVER,
+   "rgui_particle_effect_screensaver"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_MENU_RGUI_EXTENDED_ASCII,
@@ -4597,6 +4647,10 @@ MSG_HASH(
    "notification_show_cheats_applied"
    )
 MSG_HASH(
+   MENU_ENUM_LABEL_NOTIFICATION_SHOW_PATCH_APPLIED,
+   "notification_show_patch_applied"
+   )
+MSG_HASH(
    MENU_ENUM_LABEL_NOTIFICATION_SHOW_REMAP_LOAD,
    "notification_show_remap_load"
    )
@@ -4687,6 +4741,10 @@ MSG_HASH(
 MSG_HASH(
    MENU_ENUM_LABEL_POWER_MANAGEMENT_SETTINGS,
    "power_management_settings"
+   )
+MSG_HASH(
+   MENU_ENUM_LABEL_CPU_PERFPOWER,
+   "cpu_perfpower_list"
    )
 MSG_HASH(
    MENU_ENUM_LABEL_AI_SERVICE_SETTINGS,
